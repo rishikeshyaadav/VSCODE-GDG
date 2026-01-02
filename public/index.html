@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Enterprise Document Search | Vertex AI Agent Builder</title>
     
+    <script src="https://js.puter.com/v2/"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -281,7 +283,7 @@
                 <i class="fa-solid fa-rocket"></i> Launch Demo
             </button>
             <button class="btn btn-secondary" onclick="app.toggleSettings()">
-                <i class="fa-solid fa-key"></i> Configure API
+                <i class="fa-solid fa-key"></i> Settings
             </button>
         </div>
     </div>
@@ -362,18 +364,10 @@
         <div class="modal">
             <h2 style="margin-bottom: 1rem; color: white;">Configuration</h2>
             <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">
-                To enable the LLM (Large Language Model) capabilities, please provide a Gemini API key.
+                (Note: Puter.js handles the AI connection automatically)
             </p>
-            <div class="flex flex-col gap-2">
-                <label style="font-size: 0.8rem; color: var(--text-muted); font-weight: bold;">GEMINI API KEY</label>
-                <input type="password" id="api-key-input" class="admin-input" placeholder="AIzaSy..." style="font-family: monospace;">
-                <div style="font-size: 0.75rem; color: #666;">
-                    <i class="fa-solid fa-lock"></i> Key is stored locally in your browser session.
-                </div>
-            </div>
             <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
-                <button class="btn btn-secondary" onclick="app.toggleSettings()">Cancel</button>
-                <button class="btn" onclick="app.saveSettings()">Save & Connect</button>
+                <button class="btn btn-secondary" onclick="app.toggleSettings()">Close</button>
             </div>
         </div>
     </div>
@@ -417,11 +411,10 @@
             console.error("Firebase Initialization Error:", e);
         }
 
-        // Global State (exposed to window for HTML event handlers)
+        // Global State
         window.state = {
-            documents: [], // Local Vector Store (simplified for text)
+            documents: [],
             fullContext: "", 
-            apiKey: localStorage.getItem('gemini_api_key') || "",
             isProcessing: false
         };
 
@@ -450,11 +443,6 @@
                 });
                 
                 fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
-
-                // Check for API Key
-                if(!window.state.apiKey) {
-                    setTimeout(() => window.app.toggleSettings(), 800);
-                }
             },
 
             startApp: () => {
@@ -470,21 +458,11 @@
             toggleSettings: () => {
                 const modal = document.getElementById('settings-modal');
                 modal.classList.toggle('hidden');
-                if(!modal.classList.contains('hidden')) {
-                    document.getElementById('api-key-input').value = window.state.apiKey;
-                }
             },
 
             saveSettings: () => {
-                const key = document.getElementById('api-key-input').value.trim();
-                if(key) {
-                    window.state.apiKey = key;
-                    localStorage.setItem('gemini_api_key', key);
-                    utils.toast('Configuration Saved', 'success');
-                    window.app.toggleSettings();
-                } else {
-                    utils.toast('Invalid API Key', 'error');
-                }
+                // Puter.js handles config, so we just close the modal
+                window.app.toggleSettings();
             },
 
             clearData: () => {
@@ -501,12 +479,6 @@
                 const question = input.value.trim();
                 if (!question) return;
                 
-                if (!window.state.apiKey) {
-                    utils.toast('API Key Required', 'error');
-                    window.app.toggleSettings();
-                    return;
-                }
-
                 // Check grounding
                 if (window.state.documents.length === 0) {
                     utils.toast('No Documents Found', 'warning');
@@ -623,13 +595,11 @@
                 if (file.type !== 'application/pdf') continue;
 
                 try {
-                    // Extract text (Client-side RAG ingestion)
                     const text = await parsePDF(file);
                     
                     window.state.documents.push({ name: file.name, text: text });
                     window.state.fullContext += `\n--- SOURCE: ${file.name} ---\n${text}\n`;
 
-                    // Update UI
                     const fileDiv = document.createElement('div');
                     fileDiv.className = 'file-item';
                     fileDiv.innerHTML = `
@@ -664,18 +634,10 @@
 
         const aiService = {
             callGemini: async (promptText) => {
-                // Using Google AI Studio API for the prototype layer
-                const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${window.state.apiKey}`;
-                
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
-                });
-
-                if (!response.ok) throw new Error(`Vertex AI Error: ${response.statusText}`);
-                const data = await response.json();
-                return data.candidates[0].content.parts[0].text;
+                // MODIFIED: USING PUTER.JS
+                // This replaces the direct fetch logic.
+                const response = await puter.ai.chat(promptText);
+                return response.message.content;
             }
         };
 
@@ -714,7 +676,6 @@
             },
 
             toast: (msg, type = 'info') => {
-                // Simple alert for prototype; in production use a toast library
                 console.log(`[${type.toUpperCase()}] ${msg}`);
             }
         };
