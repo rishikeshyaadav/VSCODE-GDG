@@ -15,7 +15,6 @@
         :root {
             --bg-dark: #0a0a0a;
             --bg-panel: #111111;
-            /* Gemini Blue/Purple Gradient colors */
             --primary: #4da6ff; 
             --primary-dim: rgba(77, 166, 255, 0.1);
             --text-main: #e0e0e0;
@@ -57,11 +56,11 @@
             font-size: 0.75rem;
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn:active { transform: scale(0.98); } /* Mobile touch feedback */
+        .btn:active { transform: scale(0.98); }
         .btn-secondary { border-color: var(--border); color: var(--text-muted); }
         .btn-danger { border-color: var(--danger); color: var(--danger); }
 
-        /* --- Layout: Grid (Desktop Default) --- */
+        /* --- Layout --- */
         #app-container {
             display: grid;
             grid-template-columns: 320px 1fr; 
@@ -85,11 +84,29 @@
             z-index: 100;
         }
 
+        /* --- User Profile Section --- */
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+        }
+        .user-avatar {
+            width: 32px; height: 32px; border-radius: 50%; background: var(--primary);
+            display: flex; align-items: center; justify-content: center; font-weight: bold; color: black;
+        }
+        .user-info { font-size: 0.8rem; overflow: hidden; }
+        .user-name { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-status { font-size: 0.7rem; color: var(--success); }
+
         /* --- Main Chat Area --- */
         main {
             display: flex;
             flex-direction: column;
-            /* Gemini-style subtle gradient background */
             background: radial-gradient(circle at top right, #1a1f2e 0%, var(--bg-dark) 60%);
             position: relative;
             overflow: hidden;
@@ -117,12 +134,11 @@
         .ai-msg { background: rgba(77, 166, 255, 0.05); border-left: 3px solid var(--primary); }
         .user-msg { background: var(--glass); border: 1px solid var(--border); align-self: flex-end; }
 
-        /* --- Suggestions & Input --- */
         .suggestions-wrapper {
             padding: 0 15% 1rem 15%;
             background: var(--bg-panel);
             border-top: 1px solid var(--border);
-            overflow-x: auto; /* Allow horizontal scroll on mobile */
+            overflow-x: auto;
             white-space: nowrap;
         }
         
@@ -162,103 +178,36 @@
         }
         textarea:focus { outline: none; border-color: var(--primary); }
 
-        /* --- Mobile Elements --- */
-        .mobile-header-btn { display: none; } /* Hidden on Desktop */
+        .mobile-header-btn { display: none; }
         .mobile-close-btn { display: none; }
         .sidebar-backdrop { display: none; }
 
-        /* --- RESPONSIVE MOBILE STYLES (Max Width 768px) --- */
         @media (max-width: 768px) {
-            /* 1. Stack Layout */
-            #app-container {
-                display: block; /* Remove grid */
-                position: relative;
-            }
-
-            /* 2. Slide-out Sidebar */
-            aside {
-                position: fixed;
-                top: 0; left: -100%; /* Hide off-screen */
-                width: 85%;
-                height: 100%;
-                transition: left 0.3s ease;
-                box-shadow: 10px 0 50px rgba(0,0,0,0.5);
-                border-right: 1px solid var(--primary-dim);
-            }
+            #app-container { display: block; position: relative; }
+            aside { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; transition: left 0.3s ease; box-shadow: 10px 0 50px rgba(0,0,0,0.5); border-right: 1px solid var(--primary-dim); }
             aside.open { left: 0; }
-
-            /* 3. Mobile Header Button */
-            .mobile-header-btn {
-                display: flex;
-                padding: 8px 12px;
-                background: var(--glass);
-                border: 1px solid var(--border);
-                border-radius: 4px;
-                color: var(--text-main);
-                cursor: pointer;
-            }
-
-            .mobile-close-btn {
-                display: block;
-                text-align: right;
-                margin-bottom: 10px;
-            }
-
-            .sidebar-backdrop {
-                display: none;
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.8);
-                z-index: 90;
-                backdrop-filter: blur(2px);
-            }
+            .mobile-header-btn { display: flex; padding: 8px 12px; background: var(--glass); border: 1px solid var(--border); border-radius: 4px; color: var(--text-main); cursor: pointer; }
+            .mobile-close-btn { display: block; text-align: right; margin-bottom: 10px; }
+            .sidebar-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 90; backdrop-filter: blur(2px); }
             .sidebar-backdrop.active { display: block; }
-
-            /* 4. Padding Adjustments */
             .chat-history { padding: 1rem 1rem; }
             .input-area { padding: 0 1rem 1rem 1rem; }
             .suggestions-wrapper { padding: 0 1rem 1rem 1rem; }
-            
-            /* 5. Hero Adjustments */
             .hero-title { font-size: 2.2rem; }
             #hero p { padding: 0 20px; font-size: 1rem; }
         }
 
-        /* --- Admin Contact Form --- */
-        .admin-contact-box {
-            background: #0f0f0f;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: auto;
-        }
-        input.admin-input {
-            width: 100%; background: #1a1a1a; border: 1px solid var(--border);
-            color: white; padding: 10px; border-radius: 4px; margin-bottom: 8px;
-        }
+        .admin-contact-box { background: #0f0f0f; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-top: auto; }
+        input.admin-input { width: 100%; background: #1a1a1a; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 4px; margin-bottom: 8px; }
 
-        /* --- Footer --- */
-        footer {
-            height: 40px; background: #050505; border-top: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: center;
-            padding: 0 10px; font-size: 0.65rem; color: var(--text-muted); z-index: 60;
-        }
-
+        footer { height: 40px; background: #050505; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: center; padding: 0 10px; font-size: 0.65rem; color: var(--text-muted); z-index: 60; }
         .upload-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 2rem 1rem; text-align: center; background: var(--glass); }
         .file-item { background: #151515; border: 1px solid var(--border); padding: 0.8rem; border-radius: 6px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
         
-        .spinner {
-            width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1);
-            border-top: 2px solid var(--primary); border-radius: 50%;
-            animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px;
-        }
+        .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* Sparkle for Gemini branding */
-        .gemini-sparkle {
-            background: linear-gradient(135deg, #4da6ff 0%, #9b72cb 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
+        .gemini-sparkle { background: linear-gradient(135deg, #4da6ff 0%, #9b72cb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
 <body>
@@ -286,6 +235,20 @@
                 <button class="btn btn-secondary" style="border:none;" onclick="app.toggleSidebar()"><i class="fa-solid fa-xmark"></i> Close</button>
             </div>
 
+            <div id="auth-section">
+                <button id="loginBtn" class="btn w-full" style="margin-bottom: 15px; border-color: var(--text-muted); color: white;">
+                    <i class="fa-brands fa-google"></i> Sign in with Google
+                </button>
+                <div id="user-display" class="user-profile hidden">
+                    <img id="user-img" src="" class="user-avatar" alt="U">
+                    <div class="user-info">
+                        <div id="user-name" class="user-name">User</div>
+                        <div class="user-status">● Online</div>
+                    </div>
+                    <button onclick="app.signOut()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; margin-left:auto;"><i class="fa-solid fa-right-from-bracket"></i></button>
+                </div>
+            </div>
+
             <div>
                 <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">
                     Knowledge Base
@@ -299,7 +262,7 @@
                     </div>
                 </div>
                 <div id="processing-status" class="hidden" style="font-size: 0.75rem; color: var(--primary); margin-top: 10px; display: flex; align-items: center;">
-                    <span class="spinner"></span> Reading...
+                    <span class="spinner"></span> Uploading & Reading...
                 </div>
                 <div class="file-list" id="file-list-container" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
@@ -338,7 +301,7 @@
             <div id="chat-container" class="chat-history">
                 <div class="message ai-msg">
                     <strong><i class="fa-solid fa-wand-magic-sparkles" style="color: #4da6ff;"></i> Gemini:</strong>
-                    <p style="margin-top: 5px;">Hello! Upload a PDF to begin analysis. (Powered by Puter)</p>
+                    <p style="margin-top: 5px;">Hello! I'm ready. Sign in to save your session.</p>
                 </div>
             </div>
 
@@ -372,8 +335,10 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+        // 1. IMPORT AUTH
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // No API Key needed for Puter
         const firebaseConfig = {
             apiKey: "AIzaSyBcTwpQZJoxT_2xJttcj6RCHatSUXV2y0s",
             authDomain: "gdg-crackathon-a7294.firebaseapp.com",
@@ -383,13 +348,15 @@
             appId: "1:752107073890:web:0cdcff88737c266a6187c3b"
         };
 
-        let db;
+        let db, storage, auth;
         try {
             const firebaseApp = initializeApp(firebaseConfig);
             db = getFirestore(firebaseApp);
+            storage = getStorage(firebaseApp);
+            auth = getAuth(firebaseApp);
         } catch (e) { console.error(e); }
 
-        window.state = { documents: [], fullContext: "" };
+        window.state = { documents: [], fullContext: "", user: null };
 
         window.app = {
             init: () => {
@@ -408,6 +375,22 @@
                     handleFiles(e.dataTransfer.files);
                 });
                 fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+                // 2. AUTH LISTENER
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        window.state.user = user;
+                        document.getElementById('loginBtn').classList.add('hidden');
+                        document.getElementById('user-display').classList.remove('hidden');
+                        document.getElementById('user-name').textContent = user.displayName;
+                        document.getElementById('user-img').src = user.photoURL;
+                        document.getElementById('admin-name').value = user.displayName; // Auto-fill
+                    } else {
+                        window.state.user = null;
+                        document.getElementById('loginBtn').classList.remove('hidden');
+                        document.getElementById('user-display').classList.add('hidden');
+                    }
+                });
             },
 
             startApp: () => {
@@ -425,6 +408,13 @@
                 const backdrop = document.getElementById('mobile-backdrop');
                 sidebar.classList.toggle('open');
                 backdrop.classList.toggle('active');
+            },
+
+            // 3. SIGN OUT FUNCTION
+            signOut: () => {
+                signOut(auth).then(() => {
+                    utils.addMessage('system', 'Signed out.');
+                });
             },
 
             clearData: () => {
@@ -480,6 +470,14 @@
             }
         };
 
+        // 4. LOGIN BUTTON CLICK
+        document.getElementById('loginBtn').onclick = () => {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider).catch((error) => {
+                console.error("Login failed", error);
+            });
+        };
+
         document.getElementById('sendBtn').onclick = async () => {
             const nameEl = document.getElementById('admin-name');
             const msgEl = document.getElementById('admin-msg');
@@ -491,14 +489,17 @@
 
             statusEl.innerText = "Sending...";
             try {
+                // Add user ID if logged in
+                const uid = window.state.user ? window.state.user.uid : 'anonymous';
                 await addDoc(collection(db, "messages"), {
                     sender: nameEl.value,
                     content: msgEl.value,
+                    uid: uid,
                     timestamp: new Date()
                 });
                 statusEl.innerText = "Sent.";
                 statusEl.style.color = "var(--success)";
-                nameEl.value = ""; msgEl.value = "";
+                msgEl.value = "";
             } catch (e) {
                 statusEl.innerText = "Error.";
             }
@@ -509,13 +510,21 @@
             for (let i = 0; i < files.length; i++) {
                 if (files[i].type !== 'application/pdf') continue;
                 try {
+                    // Upload to Firebase Storage
+                    // Use user ID folder if logged in, otherwise 'public'
+                    const folder = window.state.user ? `users/${window.state.user.uid}/` : 'public/';
+                    const storageRef = ref(storage, folder + files[i].name);
+                    
+                    await uploadBytes(storageRef, files[i]);
+                    console.log("Uploaded to", folder);
+
                     const text = await parsePDF(files[i]);
                     window.state.documents.push({ name: files[i].name, text: text });
                     window.state.fullContext += `\n--- ${files[i].name} ---\n${text}\n`;
                     
                     const div = document.createElement('div');
                     div.className = 'file-item';
-                    div.innerHTML = `<i class="fa-solid fa-file-contract" style="color:var(--primary)"></i> <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${files[i].name}</div>`;
+                    div.innerHTML = `<i class="fa-solid fa-file-contract" style="color:var(--primary)"></i> <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${files[i].name}</div> <i class="fa-solid fa-cloud-arrow-up" style="color:var(--success); font-size:0.7rem;"></i>`;
                     document.getElementById('file-list-container').appendChild(div);
                 } catch (e) { console.error(e); }
             }
@@ -536,7 +545,6 @@
 
         const aiService = {
             callPuter: async (promptText) => {
-                // Calls Puter.js (Free, no key)
                 const response = await puter.ai.chat(promptText);
                 return response.message.content;
             }
