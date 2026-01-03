@@ -296,6 +296,9 @@
                 <div id="processing-status" class="hidden" style="font-size: 0.75rem; color: var(--primary); margin-top: 10px; display: flex; align-items: center;">
                     <span class="spinner"></span> Ingesting...
                 </div>
+                <div id="ocr-status" class="hidden" style="font-size: 0.75rem; color: var(--warning); margin-top: 5px; margin-left: 25px;">
+                   <i class="fa-solid fa-eye"></i> Vision OCR Active
+                </div>
                 <div class="file-list" id="file-list-container" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
 
@@ -333,7 +336,7 @@
             <div id="chat-container" class="chat-history">
                 <div class="message ai-msg">
                     <strong><i class="fa-brands fa-google"></i> Vertex AI:</strong>
-                    <p style="margin-top: 5px;">Ready for Mobile Analysis. Upload a PDF via the menu.</p>
+                    <p style="margin-top: 5px;">Ready for Mobile Analysis. Upload a PDF (Scans Supported).</p>
                 </div>
             </div>
 
@@ -367,8 +370,6 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-        
-        // 2. ADDED Google Generative AI Import
         import { GoogleGenerativeAI } from "@google/generative-ai";
 
         const firebaseConfig = {
@@ -386,7 +387,7 @@
             db = getFirestore(firebaseApp);
         } catch (e) { console.error(e); }
 
-        // 3. INITIALIZE GEMINI (PASTE YOUR KEY HERE)
+        // --- PASTE YOUR API KEY HERE ---
         const genAI = new GoogleGenerativeAI("PASTE_YOUR_API_KEY_HERE");
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -510,6 +511,7 @@
             for (let i = 0; i < files.length; i++) {
                 if (files[i].type !== 'application/pdf') continue;
                 try {
+                    // Start ingest
                     const text = await parsePDF(files[i]);
                     window.state.documents.push({ name: files[i].name, text: text });
                     window.state.fullContext += `\n--- ${files[i].name} ---\n${text}\n`;
@@ -521,21 +523,62 @@
                 } catch (e) { console.error(e); }
             }
             document.getElementById('processing-status').classList.add('hidden');
+            document.getElementById('ocr-status').classList.add('hidden');
         }
 
         async function parsePDF(file) {
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             let fullText = "";
+
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
+                
+                // 1. Try Standard Text Extract
                 const textContent = await page.getTextContent();
-                fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+                const pageText = textContent.items.map(item => item.str).join(' ');
+
+                // 2. Smart Check: If text is missing or very short, use VISION OCR
+                if (pageText.length < 50) { // Threshold for "Empty/Scanned" page
+                    document.getElementById('ocr-status').classList.remove('hidden');
+                    const ocrText = await renderAndOCR(page);
+                    fullText += `[Page ${i} OCR]: ${ocrText}\n`;
+                    
+                    // Delay to respect Free Tier limits (avoid hitting 15 RPM)
+                    await new Promise(r => setTimeout(r, 4000)); 
+                } else {
+                    fullText += pageText + "\n";
+                }
             }
             return fullText;
         }
 
-        // 4. UPDATED AI SERVICE (Direct Gemini Call)
+        // Helper: Convert Page to Image -> Send to Gemini
+        async function renderAndOCR(page) {
+            try {
+                const viewport = page.getViewport({ scale: 1.5 });
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
+
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                
+                // Convert to base64 image
+                const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+                
+                // Call Gemini Vision
+                const result = await model.generateContent([
+                    { inlineData: { data: base64Image, mimeType: "image/jpeg" } },
+                    { text: "Transcribe the text in this image strictly. If it is a form, list the fields and values." }
+                ]);
+                return result.response.text();
+            } catch (e) {
+                console.error("OCR Failed", e);
+                return "[Unreadable Page]";
+            }
+        }
+
         const aiService = {
             callGemini: async (promptText) => {
                 try {
