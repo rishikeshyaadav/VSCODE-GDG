@@ -98,6 +98,7 @@
         .user-avatar {
             width: 32px; height: 32px; border-radius: 50%; background: var(--primary);
             display: flex; align-items: center; justify-content: center; font-weight: bold; color: black;
+            object-fit: cover;
         }
         .user-info { font-size: 0.8rem; overflow: hidden; }
         .user-name { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -130,6 +131,7 @@
             line-height: 1.6;
             font-size: 0.95rem;
             max-width: 100%;
+            word-wrap: break-word;
         }
         .ai-msg { background: rgba(77, 166, 255, 0.05); border-left: 3px solid var(--primary); }
         .user-msg { background: var(--glass); border: 1px solid var(--border); align-self: flex-end; }
@@ -240,12 +242,12 @@
                     <i class="fa-brands fa-google"></i> Sign in with Google
                 </button>
                 <div id="user-display" class="user-profile hidden">
-                    <img id="user-img" src="" class="user-avatar" alt="U">
+                    <img id="user-img" src="" class="user-avatar" alt="User">
                     <div class="user-info">
                         <div id="user-name" class="user-name">User</div>
                         <div class="user-status">● Online</div>
                     </div>
-                    <button onclick="app.signOut()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; margin-left:auto;"><i class="fa-solid fa-right-from-bracket"></i></button>
+                    <button onclick="app.signOut()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; margin-left:auto;" title="Sign Out"><i class="fa-solid fa-right-from-bracket"></i></button>
                 </div>
             </div>
 
@@ -262,7 +264,7 @@
                     </div>
                 </div>
                 <div id="processing-status" class="hidden" style="font-size: 0.75rem; color: var(--primary); margin-top: 10px; display: flex; align-items: center;">
-                    <span class="spinner"></span> Uploading & Reading...
+                    <span class="spinner"></span> Processing...
                 </div>
                 <div class="file-list" id="file-list-container" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
@@ -301,7 +303,7 @@
             <div id="chat-container" class="chat-history">
                 <div class="message ai-msg">
                     <strong><i class="fa-solid fa-wand-magic-sparkles" style="color: #4da6ff;"></i> Gemini:</strong>
-                    <p style="margin-top: 5px;">Hello! I'm ready. Sign in to save your session.</p>
+                    <p style="margin-top: 5px;">Hello! I'm ready. Sign in to save your files to the cloud.</p>
                 </div>
             </div>
 
@@ -336,7 +338,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-        // 1. IMPORT AUTH
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -354,7 +355,7 @@
             db = getFirestore(firebaseApp);
             storage = getStorage(firebaseApp);
             auth = getAuth(firebaseApp);
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Firebase Init Error:", e); }
 
         window.state = { documents: [], fullContext: "", user: null };
 
@@ -376,21 +377,23 @@
                 });
                 fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-                // 2. AUTH LISTENER
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        window.state.user = user;
-                        document.getElementById('loginBtn').classList.add('hidden');
-                        document.getElementById('user-display').classList.remove('hidden');
-                        document.getElementById('user-name').textContent = user.displayName;
-                        document.getElementById('user-img').src = user.photoURL;
-                        document.getElementById('admin-name').value = user.displayName; // Auto-fill
-                    } else {
-                        window.state.user = null;
-                        document.getElementById('loginBtn').classList.remove('hidden');
-                        document.getElementById('user-display').classList.add('hidden');
-                    }
-                });
+                // Auth Logic
+                if(auth) {
+                    onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            window.state.user = user;
+                            document.getElementById('loginBtn').classList.add('hidden');
+                            document.getElementById('user-display').classList.remove('hidden');
+                            document.getElementById('user-name').textContent = user.displayName;
+                            document.getElementById('user-img').src = user.photoURL || '';
+                            document.getElementById('admin-name').value = user.displayName;
+                        } else {
+                            window.state.user = null;
+                            document.getElementById('loginBtn').classList.remove('hidden');
+                            document.getElementById('user-display').classList.add('hidden');
+                        }
+                    });
+                }
             },
 
             startApp: () => {
@@ -410,11 +413,8 @@
                 backdrop.classList.toggle('active');
             },
 
-            // 3. SIGN OUT FUNCTION
             signOut: () => {
-                signOut(auth).then(() => {
-                    utils.addMessage('system', 'Signed out.');
-                });
+                if(auth) signOut(auth).then(() => utils.addMessage('system', 'Signed out successfully.'));
             },
 
             clearData: () => {
@@ -440,10 +440,15 @@
                 const loadingId = utils.addLoading();
 
                 try {
+                    // Optimized Prompt
                     const prompt = `
-                        CONTEXT: "${window.state.fullContext.substring(0, 30000)}"
+                        You are an expert document analyst. Use the provided Context below to answer the Query.
+                        If the answer is not in the context, state that clearly.
+                        
+                        CONTEXT:
+                        "${window.state.fullContext.substring(0, 30000)}"
+                        
                         QUERY: "${question}"
-                        Answer strictly based on context.
                     `;
                     const response = await aiService.callPuter(prompt);
                     utils.removeLoading(loadingId);
@@ -459,7 +464,7 @@
                 utils.addMessage('user', "Running Audit...");
                 const loadingId = utils.addLoading();
                 try {
-                    const prompt = `Audit for contradictions:\n"${window.state.fullContext.substring(0, 25000)}"`;
+                    const prompt = `Analyze this text for logical contradictions, risks, or errors:\n"${window.state.fullContext.substring(0, 25000)}"`;
                     const response = await aiService.callPuter(prompt);
                     utils.removeLoading(loadingId);
                     utils.addMessage('ai', response);
@@ -470,12 +475,12 @@
             }
         };
 
-        // 4. LOGIN BUTTON CLICK
+        // UI Event Listeners
         document.getElementById('loginBtn').onclick = () => {
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider).catch((error) => {
-                console.error("Login failed", error);
-            });
+            if(auth) {
+                const provider = new GoogleAuthProvider();
+                signInWithPopup(auth, provider).catch(e => console.error(e));
+            }
         };
 
         document.getElementById('sendBtn').onclick = async () => {
@@ -489,8 +494,7 @@
 
             statusEl.innerText = "Sending...";
             try {
-                // Add user ID if logged in
-                const uid = window.state.user ? window.state.user.uid : 'anonymous';
+                const uid = window.state.user ? window.state.user.uid : 'anon';
                 await addDoc(collection(db, "messages"), {
                     sender: nameEl.value,
                     content: msgEl.value,
@@ -505,42 +509,64 @@
             }
         };
 
+        // Optimized File Handling (Parallel Uploads)
         async function handleFiles(files) {
             document.getElementById('processing-status').classList.remove('hidden');
-            for (let i = 0; i < files.length; i++) {
-                if (files[i].type !== 'application/pdf') continue;
-                try {
-                    // Upload to Firebase Storage
-                    // Use user ID folder if logged in, otherwise 'public'
-                    const folder = window.state.user ? `users/${window.state.user.uid}/` : 'public/';
-                    const storageRef = ref(storage, folder + files[i].name);
-                    
-                    await uploadBytes(storageRef, files[i]);
-                    console.log("Uploaded to", folder);
+            
+            // Convert FileList to Array for easier handling
+            const fileArray = Array.from(files);
 
-                    const text = await parsePDF(files[i]);
-                    window.state.documents.push({ name: files[i].name, text: text });
-                    window.state.fullContext += `\n--- ${files[i].name} ---\n${text}\n`;
+            // Process all files in parallel
+            await Promise.all(fileArray.map(async (file) => {
+                if (file.type !== 'application/pdf') return;
+
+                try {
+                    // 1. Upload to Storage
+                    if (storage) {
+                        const folder = window.state.user ? `users/${window.state.user.uid}/` : 'public/';
+                        const storageRef = ref(storage, folder + file.name);
+                        await uploadBytes(storageRef, file);
+                        console.log(`Uploaded ${file.name}`);
+                    }
+
+                    // 2. Parse PDF Locally
+                    const text = await parsePDF(file);
                     
+                    // 3. Update State
+                    window.state.documents.push({ name: file.name, text: text });
+                    window.state.fullContext += `\n--- ${file.name} ---\n${text}\n`;
+                    
+                    // 4. Update UI
                     const div = document.createElement('div');
                     div.className = 'file-item';
-                    div.innerHTML = `<i class="fa-solid fa-file-contract" style="color:var(--primary)"></i> <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${files[i].name}</div> <i class="fa-solid fa-cloud-arrow-up" style="color:var(--success); font-size:0.7rem;"></i>`;
+                    div.innerHTML = `<i class="fa-solid fa-file-contract" style="color:var(--primary)"></i> <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${file.name}</div> <i class="fa-solid fa-cloud-arrow-up" style="color:var(--success); font-size:0.7rem;"></i>`;
                     document.getElementById('file-list-container').appendChild(div);
-                } catch (e) { console.error(e); }
-            }
+
+                    // 5. Check for Scanned/Empty PDF
+                    if (text.trim().length < 50) {
+                        utils.addMessage('system', `⚠️ Warning: "${file.name}" appears to be a scanned image or empty. I might not be able to read it.`);
+                    }
+
+                } catch (e) { console.error("File Error:", e); }
+            }));
+
             document.getElementById('processing-status').classList.add('hidden');
         }
 
         async function parsePDF(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            let fullText = "";
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+                }
+                return fullText;
+            } catch (e) {
+                return "";
             }
-            return fullText;
         }
 
         const aiService = {
@@ -555,7 +581,14 @@
                 const container = document.getElementById('chat-container');
                 const div = document.createElement('div');
                 div.className = `message ${role === 'user' ? 'user-msg' : 'ai-msg'}`;
-                div.innerHTML = `<strong>${role === 'user' ? 'You' : 'Gemini'}</strong>: ${marked.parse(text)}`;
+                // Handle system messages distinctly
+                if (role === 'system') {
+                    div.style.background = 'rgba(255, 184, 0, 0.1)';
+                    div.style.borderLeft = '3px solid var(--warning)';
+                    div.innerHTML = `<strong><i class="fa-solid fa-circle-info"></i> System:</strong> ${text}`;
+                } else {
+                    div.innerHTML = `<strong>${role === 'user' ? 'You' : 'Gemini'}</strong>: ${marked.parse(text)}`;
+                }
                 container.appendChild(div);
                 requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
             },
