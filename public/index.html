@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Enterprise Document Search | Vertex AI</title>
+    <title>Enterprise Document Search | OpenRouter</title>
     
-    <script src="https://js.puter.com/v2/"></script>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -15,8 +13,8 @@
         :root {
             --bg-dark: #0a0a0a;
             --bg-panel: #111111;
-            --primary: #00d4ff; 
-            --primary-dim: rgba(0, 212, 255, 0.1);
+            --primary: #a855f7; /* Changed color to Purple for OpenRouter vibe */
+            --primary-dim: rgba(168, 85, 247, 0.1);
             --text-main: #e0e0e0;
             --text-muted: #888888;
             --border: #333333;
@@ -56,7 +54,7 @@
             font-size: 0.75rem;
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn:active { transform: scale(0.98); } /* Mobile touch feedback */
+        .btn:active { transform: scale(0.98); }
         .btn-secondary { border-color: var(--border); color: var(--text-muted); }
         .btn-danger { border-color: var(--danger); color: var(--danger); }
 
@@ -88,7 +86,7 @@
         main {
             display: flex;
             flex-direction: column;
-            background: radial-gradient(circle at top right, #131320 0%, var(--bg-dark) 60%);
+            background: radial-gradient(circle at top right, #1a1a2e 0%, var(--bg-dark) 60%);
             position: relative;
             overflow: hidden;
             height: 100%;
@@ -112,7 +110,7 @@
             font-size: 0.95rem;
             max-width: 100%;
         }
-        .ai-msg { background: rgba(0, 212, 255, 0.03); border-left: 3px solid var(--primary); }
+        .ai-msg { background: rgba(168, 85, 247, 0.03); border-left: 3px solid var(--primary); }
         .user-msg { background: var(--glass); border: 1px solid var(--border); align-self: flex-end; }
 
         /* --- Suggestions & Input --- */
@@ -120,7 +118,7 @@
             padding: 0 15% 1rem 15%;
             background: var(--bg-panel);
             border-top: 1px solid var(--border);
-            overflow-x: auto; /* Allow horizontal scroll on mobile */
+            overflow-x: auto;
             white-space: nowrap;
         }
         
@@ -161,94 +159,33 @@
         textarea:focus { outline: none; border-color: var(--primary); }
 
         /* --- Mobile Elements --- */
-        .mobile-header-btn { display: none; } /* Hidden on Desktop */
+        .mobile-header-btn { display: none; }
         .mobile-close-btn { display: none; }
         .sidebar-backdrop { display: none; }
 
-        /* --- RESPONSIVE MOBILE STYLES (Max Width 768px) --- */
         @media (max-width: 768px) {
-            /* 1. Stack Layout */
-            #app-container {
-                display: block; /* Remove grid */
-                position: relative;
-            }
-
-            /* 2. Slide-out Sidebar */
-            aside {
-                position: fixed;
-                top: 0; left: -100%; /* Hide off-screen */
-                width: 85%;
-                height: 100%;
-                transition: left 0.3s ease;
-                box-shadow: 10px 0 50px rgba(0,0,0,0.5);
-                border-right: 1px solid var(--primary-dim);
-            }
+            #app-container { display: block; position: relative; }
+            aside { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; transition: left 0.3s ease; box-shadow: 10px 0 50px rgba(0,0,0,0.5); border-right: 1px solid var(--primary-dim); }
             aside.open { left: 0; }
-
-            /* 3. Mobile Header Button */
-            .mobile-header-btn {
-                display: flex;
-                padding: 8px 12px;
-                background: var(--glass);
-                border: 1px solid var(--border);
-                border-radius: 4px;
-                color: var(--text-main);
-                cursor: pointer;
-            }
-
-            .mobile-close-btn {
-                display: block;
-                text-align: right;
-                margin-bottom: 10px;
-            }
-
-            .sidebar-backdrop {
-                display: none;
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.8);
-                z-index: 90;
-                backdrop-filter: blur(2px);
-            }
+            .mobile-header-btn { display: flex; padding: 8px 12px; background: var(--glass); border: 1px solid var(--border); border-radius: 4px; color: var(--text-main); cursor: pointer; }
+            .mobile-close-btn { display: block; text-align: right; margin-bottom: 10px; }
+            .sidebar-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 90; backdrop-filter: blur(2px); }
             .sidebar-backdrop.active { display: block; }
-
-            /* 4. Padding Adjustments */
             .chat-history { padding: 1rem 1rem; }
             .input-area { padding: 0 1rem 1rem 1rem; }
             .suggestions-wrapper { padding: 0 1rem 1rem 1rem; }
-            
-            /* 5. Hero Adjustments */
             .hero-title { font-size: 2.2rem; }
             #hero p { padding: 0 20px; font-size: 1rem; }
         }
 
-        /* --- Admin Contact Form --- */
-        .admin-contact-box {
-            background: #0f0f0f;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: auto;
-        }
-        input.admin-input {
-            width: 100%; background: #1a1a1a; border: 1px solid var(--border);
-            color: white; padding: 10px; border-radius: 4px; margin-bottom: 8px;
-        }
+        .admin-contact-box { background: #0f0f0f; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-top: auto; }
+        input.admin-input { width: 100%; background: #1a1a1a; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 4px; margin-bottom: 8px; }
 
-        /* --- Footer --- */
-        footer {
-            height: 40px; background: #050505; border-top: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: center;
-            padding: 0 10px; font-size: 0.65rem; color: var(--text-muted); z-index: 60;
-        }
-
+        footer { height: 40px; background: #050505; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: center; padding: 0 10px; font-size: 0.65rem; color: var(--text-muted); z-index: 60; }
         .upload-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 2rem 1rem; text-align: center; background: var(--glass); }
         .file-item { background: #151515; border: 1px solid var(--border); padding: 0.8rem; border-radius: 6px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
         
-        .spinner {
-            width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1);
-            border-top: 2px solid var(--primary); border-radius: 50%;
-            animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px;
-        }
+        .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px; }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
@@ -256,9 +193,9 @@
 
     <div id="hero" class="hero-section" style="position: absolute; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
         <div style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;">
-            <i class="fa-brands fa-google"></i>
+            <i class="fa-solid fa-microchip"></i>
         </div>
-        <h1 class="hero-title" style="margin-bottom: 1rem; font-weight: 800; background: linear-gradient(135deg, #fff 0%, var(--primary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Vertex AI Agent</h1>
+        <h1 class="hero-title" style="margin-bottom: 1rem; font-weight: 800; background: linear-gradient(135deg, #fff 0%, var(--primary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">OpenRouter Agent</h1>
         <p style="color: var(--text-muted); margin-bottom: 2rem;">
             Enterprise Document Search & RAG
         </p>
@@ -289,6 +226,9 @@
                 </div>
                 <div id="processing-status" class="hidden" style="font-size: 0.75rem; color: var(--primary); margin-top: 10px; display: flex; align-items: center;">
                     <span class="spinner"></span> Ingesting...
+                </div>
+                <div id="ocr-status" class="hidden" style="font-size: 0.75rem; color: var(--warning); margin-top: 5px; margin-left: 25px;">
+                   <i class="fa-solid fa-eye"></i> Vision OCR Active
                 </div>
                 <div class="file-list" id="file-list-container" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
@@ -326,8 +266,8 @@
 
             <div id="chat-container" class="chat-history">
                 <div class="message ai-msg">
-                    <strong><i class="fa-brands fa-google"></i> Vertex AI:</strong>
-                    <p style="margin-top: 5px;">Ready for Mobile Analysis. Upload a PDF via the menu.</p>
+                    <strong><i class="fa-solid fa-microchip"></i> AI Assistant:</strong>
+                    <p style="margin-top: 5px;">Ready. Powered by OpenRouter.</p>
                 </div>
             </div>
 
@@ -355,12 +295,17 @@
             <i class="fa-brands fa-google-cloud" style="color: var(--primary);"></i>
             <span>Firebase</span>
         </div>
-        <div>Vertex AI Mobile</div>
+        <div>OpenRouter Mobile</div>
     </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // --- CONFIGURATION ---
+        const OPENROUTER_API_KEY = "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"; // Your provided key
+        const OPENROUTER_MODEL = "google/gemini-flash-1.5"; // Using Gemini via OpenRouter
+        const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBcTwpQZJoxT_2xJttcj6RCHatSUXV2y0s",
@@ -443,7 +388,7 @@
                         QUERY: "${question}"
                         Answer strictly based on context.
                     `;
-                    const response = await aiService.callGemini(prompt);
+                    const response = await aiService.callOpenRouter(prompt);
                     utils.removeLoading(loadingId);
                     utils.addMessage('ai', response);
                 } catch (error) {
@@ -458,7 +403,7 @@
                 const loadingId = utils.addLoading();
                 try {
                     const prompt = `Audit for contradictions:\n"${window.state.fullContext.substring(0, 25000)}"`;
-                    const response = await aiService.callGemini(prompt);
+                    const response = await aiService.callOpenRouter(prompt);
                     utils.removeLoading(loadingId);
                     utils.addMessage('ai', response);
                 } catch (e) {
@@ -508,584 +453,106 @@
                 } catch (e) { console.error(e); }
             }
             document.getElementById('processing-status').classList.add('hidden');
+            document.getElementById('ocr-status').classList.add('hidden');
         }
 
         async function parsePDF(file) {
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             let fullText = "";
+
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const textContent = await page.getTextContent();
-                fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+                const pageText = textContent.items.map(item => item.str).join(' ');
+
+                // Smart Check: If text is missing or very short, use VISION OCR via OpenRouter
+                if (pageText.length < 50) { 
+                    document.getElementById('ocr-status').classList.remove('hidden');
+                    const ocrText = await renderAndOCR(page);
+                    fullText += `[Page ${i} OCR]: ${ocrText}\n`;
+                    // OpenRouter handles limits better, but safe delay
+                    await new Promise(r => setTimeout(r, 2000)); 
+                } else {
+                    fullText += pageText + "\n";
+                }
             }
             return fullText;
         }
 
-        const aiService = {
-            callGemini: async (promptText) => {
-                const response = await puter.ai.chat(promptText);
-                return response.message.content;
-            }
-        };
+        // Helper: Convert Page to Image -> Send to OpenRouter (OpenAI Format)
+        async function renderAndOCR(page) {
+            try {
+                const viewport = page.getViewport({ scale: 1.5 });
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.height = viewport.height;
+                canvas.width = viewport.width;
 
-        const utils = {
-            addMessage: (role, text) => {
-                const container = document.getElementById('chat-container');
-                const div = document.createElement('div');
-                div.className = `message ${role === 'user' ? 'user-msg' : 'ai-msg'}`;
-                div.innerHTML = `<strong>${role === 'user' ? 'You' : 'Vertex AI'}</strong>: ${marked.parse(text)}`;
-                container.appendChild(div);
-                requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
-            },
-            addLoading: () => {
-                const container = document.getElementById('chat-container');
-                const id = 'l-' + Date.now();
-                const div = document.createElement('div');
-                div.id = id;
-                div.className = 'message ai-msg';
-                div.innerHTML = `<span class="spinner"></span> Thinking...`;
-                container.appendChild(div);
-                container.scrollTop = container.scrollHeight;
-                return id;
-            },
-            removeLoading: (id) => {
-                const el = document.getElementById(id);
-                if(el) el.remove();
-            }
-        };
-
-        window.app.init();
-    </script>
-</body>
-</html><!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Enterprise Document Search | Vertex AI</title>
-    
-    <script src="https://js.puter.com/v2/"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-        :root {
-            --bg-dark: #0a0a0a;
-            --bg-panel: #111111;
-            --primary: #00d4ff; 
-            --primary-dim: rgba(0, 212, 255, 0.1);
-            --text-main: #e0e0e0;
-            --text-muted: #888888;
-            --border: #333333;
-            --glass: rgba(255, 255, 255, 0.03);
-            --success: #00ff9d;
-            --warning: #ffb800;
-            --danger: #ff4d4d;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
-        
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        /* --- Utility --- */
-        .hidden { display: none !important; }
-        .w-full { width: 100%; }
-        .flex { display: flex; }
-        .gap-2 { gap: 0.5rem; }
-
-        /* --- Buttons --- */
-        .btn {
-            background: var(--glass);
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            padding: 0.6rem 1.2rem;
-            cursor: pointer;
-            border-radius: 4px;
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .btn:active { transform: scale(0.98); } /* Mobile touch feedback */
-        .btn-secondary { border-color: var(--border); color: var(--text-muted); }
-        .btn-danger { border-color: var(--danger); color: var(--danger); }
-
-        /* --- Layout: Grid (Desktop Default) --- */
-        #app-container {
-            display: grid;
-            grid-template-columns: 320px 1fr; 
-            height: calc(100vh - 40px);
-            opacity: 0;
-            transition: opacity 0.5s ease;
-            overflow: hidden;
-            position: relative;
-        }
-
-        /* --- Sidebar --- */
-        aside {
-            background: var(--bg-panel);
-            border-right: 1px solid var(--border);
-            padding: 1rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            overflow-y: auto;
-            height: 100%;
-            z-index: 100;
-        }
-
-        /* --- Main Chat Area --- */
-        main {
-            display: flex;
-            flex-direction: column;
-            background: radial-gradient(circle at top right, #131320 0%, var(--bg-dark) 60%);
-            position: relative;
-            overflow: hidden;
-            height: 100%;
-            width: 100%;
-        }
-
-        .chat-history {
-            flex: 1;
-            overflow-y: auto;
-            padding: 2rem 15%;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
-            scroll-behavior: smooth;
-        }
-
-        .message {
-            padding: 1.5rem;
-            border-radius: 8px;
-            line-height: 1.6;
-            font-size: 0.95rem;
-            max-width: 100%;
-        }
-        .ai-msg { background: rgba(0, 212, 255, 0.03); border-left: 3px solid var(--primary); }
-        .user-msg { background: var(--glass); border: 1px solid var(--border); align-self: flex-end; }
-
-        /* --- Suggestions & Input --- */
-        .suggestions-wrapper {
-            padding: 0 15% 1rem 15%;
-            background: var(--bg-panel);
-            border-top: 1px solid var(--border);
-            overflow-x: auto; /* Allow horizontal scroll on mobile */
-            white-space: nowrap;
-        }
-        
-        .chips-container { display: flex; gap: 10px; }
-        
-        .chip {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            display: inline-flex; align-items: center; gap: 6px;
-            flex-shrink: 0;
-        }
-
-        .input-area {
-            padding: 0 15% 1.5rem 15%;
-            background: var(--bg-panel);
-            display: flex;
-            gap: 1rem;
-            align-items: flex-end;
-            flex-shrink: 0;
-        }
-
-        textarea {
-            flex: 1;
-            background: #050505;
-            border: 1px solid var(--border);
-            color: white;
-            padding: 12px;
-            border-radius: 6px;
-            resize: none;
-            height: 50px;
-            font-family: inherit;
-        }
-        textarea:focus { outline: none; border-color: var(--primary); }
-
-        /* --- Mobile Elements --- */
-        .mobile-header-btn { display: none; } /* Hidden on Desktop */
-        .mobile-close-btn { display: none; }
-        .sidebar-backdrop { display: none; }
-
-        /* --- RESPONSIVE MOBILE STYLES (Max Width 768px) --- */
-        @media (max-width: 768px) {
-            /* 1. Stack Layout */
-            #app-container {
-                display: block; /* Remove grid */
-                position: relative;
-            }
-
-            /* 2. Slide-out Sidebar */
-            aside {
-                position: fixed;
-                top: 0; left: -100%; /* Hide off-screen */
-                width: 85%;
-                height: 100%;
-                transition: left 0.3s ease;
-                box-shadow: 10px 0 50px rgba(0,0,0,0.5);
-                border-right: 1px solid var(--primary-dim);
-            }
-            aside.open { left: 0; }
-
-            /* 3. Mobile Header Button */
-            .mobile-header-btn {
-                display: flex;
-                padding: 8px 12px;
-                background: var(--glass);
-                border: 1px solid var(--border);
-                border-radius: 4px;
-                color: var(--text-main);
-                cursor: pointer;
-            }
-
-            .mobile-close-btn {
-                display: block;
-                text-align: right;
-                margin-bottom: 10px;
-            }
-
-            .sidebar-backdrop {
-                display: none;
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.8);
-                z-index: 90;
-                backdrop-filter: blur(2px);
-            }
-            .sidebar-backdrop.active { display: block; }
-
-            /* 4. Padding Adjustments */
-            .chat-history { padding: 1rem 1rem; }
-            .input-area { padding: 0 1rem 1rem 1rem; }
-            .suggestions-wrapper { padding: 0 1rem 1rem 1rem; }
-            
-            /* 5. Hero Adjustments */
-            .hero-title { font-size: 2.2rem; }
-            #hero p { padding: 0 20px; font-size: 1rem; }
-        }
-
-        /* --- Admin Contact Form --- */
-        .admin-contact-box {
-            background: #0f0f0f;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: auto;
-        }
-        input.admin-input {
-            width: 100%; background: #1a1a1a; border: 1px solid var(--border);
-            color: white; padding: 10px; border-radius: 4px; margin-bottom: 8px;
-        }
-
-        /* --- Footer --- */
-        footer {
-            height: 40px; background: #050505; border-top: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: center;
-            padding: 0 10px; font-size: 0.65rem; color: var(--text-muted); z-index: 60;
-        }
-
-        .upload-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 2rem 1rem; text-align: center; background: var(--glass); }
-        .file-item { background: #151515; border: 1px solid var(--border); padding: 0.8rem; border-radius: 6px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
-        
-        .spinner {
-            width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1);
-            border-top: 2px solid var(--primary); border-radius: 50%;
-            animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-    </style>
-</head>
-<body>
-
-    <div id="hero" class="hero-section" style="position: absolute; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-        <div style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;">
-            <i class="fa-brands fa-google"></i>
-        </div>
-        <h1 class="hero-title" style="margin-bottom: 1rem; font-weight: 800; background: linear-gradient(135deg, #fff 0%, var(--primary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Vertex AI Agent</h1>
-        <p style="color: var(--text-muted); margin-bottom: 2rem;">
-            Enterprise Document Search & RAG
-        </p>
-        <button class="btn" onclick="app.startApp()" style="padding: 1rem 2rem;">
-            <i class="fa-solid fa-rocket"></i> Launch Demo
-        </button>
-    </div>
-
-    <div id="mobile-backdrop" class="sidebar-backdrop" onclick="app.toggleSidebar()"></div>
-
-    <div id="app-container">
-        <aside id="app-sidebar">
-            <div class="mobile-close-btn">
-                <button class="btn btn-secondary" style="border:none;" onclick="app.toggleSidebar()"><i class="fa-solid fa-xmark"></i> Close</button>
-            </div>
-
-            <div>
-                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">
-                    Knowledge Base
-                </div>
-                <div style="margin-top: 15px;">
-                    <div id="drop-zone" class="upload-zone">
-                        <i class="fa-solid fa-file-pdf" style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 10px;"></i>
-                        <p style="font-size: 0.8rem; color: #888;">Tap to Upload PDF</p>
-                        <input type="file" id="file-input" accept="application/pdf" multiple hidden>
-                        <button class="btn btn-secondary" style="margin-top: 10px; width: 100%;" onclick="document.getElementById('file-input').click()">Select Files</button>
-                    </div>
-                </div>
-                <div id="processing-status" class="hidden" style="font-size: 0.75rem; color: var(--primary); margin-top: 10px; display: flex; align-items: center;">
-                    <span class="spinner"></span> Ingesting...
-                </div>
-                <div class="file-list" id="file-list-container" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;"></div>
-            </div>
-
-            <div class="admin-contact-box">
-                <div style="font-size: 0.8rem; font-weight: 700; color: white; margin-bottom: 10px;">
-                    <i class="fa-solid fa-envelope"></i> Contact Admin
-                </div>
-                <input type="text" id="admin-name" class="admin-input" placeholder="Your Name">
-                <input type="text" id="admin-msg" class="admin-input" placeholder="Message">
-                <button id="sendBtn" class="btn w-full" style="font-size: 0.7rem;">Send to Firestore</button>
-                <p id="db-status" style="font-size: 0.7rem; margin-top: 8px; min-height: 1rem;"></p>
-            </div>
-
-            <div style="margin-top: 10px;">
-                <button class="btn btn-danger w-full" onclick="app.clearData()">Reset</button>
-            </div>
-        </aside>
-
-        <main>
-            <div style="padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); flex-shrink: 0;">
-                <div class="flex gap-2 align-items-center">
-                    <div class="mobile-header-btn" onclick="app.toggleSidebar()">
-                        <i class="fa-solid fa-bars"></i>
-                    </div>
-                    
-                    <button class="btn btn-secondary" onclick="app.runContradictionScan()">
-                        <i class="fa-solid fa-bug"></i> <span style="display:none; @media(min-width:768px){display:inline;}">Audit</span>
-                    </button>
-                </div>
-                <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px;">
-                    <i class="fa-solid fa-circle" style="color: var(--success); font-size: 8px;"></i> Online
-                </div>
-            </div>
-
-            <div id="chat-container" class="chat-history">
-                <div class="message ai-msg">
-                    <strong><i class="fa-brands fa-google"></i> Vertex AI:</strong>
-                    <p style="margin-top: 5px;">Ready for Mobile Analysis. Upload a PDF via the menu.</p>
-                </div>
-            </div>
-
-            <div class="suggestions-wrapper">
-                <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px;">QUICK ACTIONS:</div>
-                <div class="chips-container">
-                    <div class="chip" onclick="app.sendMessage('Identify the top 3 biggest risks.')"><i class="fa-solid fa-triangle-exclamation"></i> Risks</div>
-                    <div class="chip" onclick="app.sendMessage('List termination clauses.')"><i class="fa-solid fa-hand"></i> Termination</div>
-                    <div class="chip" onclick="app.sendMessage('Summarize payment terms.')"><i class="fa-solid fa-money-bill"></i> Payments</div>
-                </div>
-            </div>
-
-            <div class="input-area">
-                <textarea id="user-input" placeholder="Ask a question..." 
-                          onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); app.sendMessage(); }"></textarea>
-                <button class="btn" style="height: 48px; width: 48px; padding: 0;" onclick="app.sendMessage()">
-                    <i class="fa-solid fa-paper-plane"></i>
-                </button>
-            </div>
-        </main>
-    </div>
-
-    <footer>
-        <div class="flex items-center gap-2">
-            <i class="fa-brands fa-google-cloud" style="color: var(--primary);"></i>
-            <span>Firebase</span>
-        </div>
-        <div>Vertex AI Mobile</div>
-    </footer>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBcTwpQZJoxT_2xJttcj6RCHatSUXV2y0s",
-            authDomain: "gdg-crackathon-a7294.firebaseapp.com",
-            projectId: "gdg-crackathon-a7294",
-            storageBucket: "gdg-crackathon-a7294.firebasestorage.app",
-            messagingSenderId: "752107073890",
-            appId: "1:752107073890:web:0cdcff88737c266a6187c3b"
-        };
-
-        let db;
-        try {
-            const firebaseApp = initializeApp(firebaseConfig);
-            db = getFirestore(firebaseApp);
-        } catch (e) { console.error(e); }
-
-        window.state = { documents: [], fullContext: "" };
-
-        window.app = {
-            init: () => {
-                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-                const dropZone = document.getElementById('drop-zone');
-                const fileInput = document.getElementById('file-input');
-
-                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
-                });
-
-                dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
-                dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-                dropZone.addEventListener('drop', (e) => {
-                    dropZone.classList.remove('dragover');
-                    handleFiles(e.dataTransfer.files);
-                });
-                fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
-            },
-
-            startApp: () => {
-                document.getElementById('hero').style.opacity = '0';
-                setTimeout(() => {
-                    document.getElementById('hero').classList.add('hidden');
-                    const container = document.getElementById('app-container');
-                    container.classList.remove('hidden');
-                    container.style.opacity = '1';
-                }, 500);
-            },
-
-            toggleSidebar: () => {
-                const sidebar = document.getElementById('app-sidebar');
-                const backdrop = document.getElementById('mobile-backdrop');
-                sidebar.classList.toggle('open');
-                backdrop.classList.toggle('active');
-            },
-
-            clearData: () => {
-                window.state.documents = [];
-                window.state.fullContext = "";
-                document.getElementById('file-list-container').innerHTML = '';
-                document.getElementById('chat-container').innerHTML = '';
-            },
-
-            sendMessage: async (manualText) => {
-                const input = document.getElementById('user-input');
-                const question = manualText || input.value.trim();
+                await page.render({ canvasContext: context, viewport: viewport }).promise;
+                const base64Image = canvas.toDataURL('image/jpeg', 0.8);
                 
-                if (!question) return;
-
-                if (window.state.documents.length === 0) {
-                    utils.addMessage('system', 'Please upload a PDF first (Check Menu).');
-                    return;
-                }
-
-                utils.addMessage('user', question);
-                input.value = '';
-                const loadingId = utils.addLoading();
-
-                try {
-                    const prompt = `
-                        CONTEXT: "${window.state.fullContext.substring(0, 30000)}"
-                        QUERY: "${question}"
-                        Answer strictly based on context.
-                    `;
-                    const response = await aiService.callGemini(prompt);
-                    utils.removeLoading(loadingId);
-                    utils.addMessage('ai', response);
-                } catch (error) {
-                    utils.removeLoading(loadingId);
-                    utils.addMessage('system', `Error: ${error.message}`);
-                }
-            },
-
-            runContradictionScan: async () => {
-                if (window.state.documents.length === 0) return;
-                utils.addMessage('user', "Running Audit...");
-                const loadingId = utils.addLoading();
-                try {
-                    const prompt = `Audit for contradictions:\n"${window.state.fullContext.substring(0, 25000)}"`;
-                    const response = await aiService.callGemini(prompt);
-                    utils.removeLoading(loadingId);
-                    utils.addMessage('ai', response);
-                } catch (e) {
-                    utils.removeLoading(loadingId);
-                    utils.addMessage('system', `Error: ${e.message}`);
-                }
-            }
-        };
-
-        document.getElementById('sendBtn').onclick = async () => {
-            const nameEl = document.getElementById('admin-name');
-            const msgEl = document.getElementById('admin-msg');
-            const statusEl = document.getElementById('db-status');
-            
-            if(!nameEl.value || !msgEl.value) {
-                statusEl.innerText = "Empty fields."; return;
-            }
-
-            statusEl.innerText = "Sending...";
-            try {
-                await addDoc(collection(db, "messages"), {
-                    sender: nameEl.value,
-                    content: msgEl.value,
-                    timestamp: new Date()
+                // Call OpenRouter with Image
+                const response = await fetch(OPENROUTER_URL, {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                        "Content-Type": "application/json",
+                        "HTTP-Referer": window.location.href, // OpenRouter requires this
+                        "X-Title": "GDG Crackathon App"
+                    },
+                    body: JSON.stringify({
+                        model: OPENROUTER_MODEL,
+                        messages: [
+                            {
+                                role: "user",
+                                content: [
+                                    { type: "text", text: "Transcribe the text in this image strictly." },
+                                    { type: "image_url", image_url: { url: base64Image } }
+                                ]
+                            }
+                        ]
+                    })
                 });
-                statusEl.innerText = "Sent.";
-                statusEl.style.color = "var(--success)";
-                nameEl.value = ""; msgEl.value = "";
+
+                if(!response.ok) throw new Error("OpenRouter API Error");
+                const data = await response.json();
+                return data.choices[0].message.content;
             } catch (e) {
-                statusEl.innerText = "Error.";
+                console.error("OCR Failed", e);
+                return "[Unreadable Page]";
             }
-        };
-
-        async function handleFiles(files) {
-            document.getElementById('processing-status').classList.remove('hidden');
-            for (let i = 0; i < files.length; i++) {
-                if (files[i].type !== 'application/pdf') continue;
-                try {
-                    const text = await parsePDF(files[i]);
-                    window.state.documents.push({ name: files[i].name, text: text });
-                    window.state.fullContext += `\n--- ${files[i].name} ---\n${text}\n`;
-                    
-                    const div = document.createElement('div');
-                    div.className = 'file-item';
-                    div.innerHTML = `<i class="fa-solid fa-file-contract" style="color:var(--primary)"></i> <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${files[i].name}</div>`;
-                    document.getElementById('file-list-container').appendChild(div);
-                } catch (e) { console.error(e); }
-            }
-            document.getElementById('processing-status').classList.add('hidden');
-        }
-
-        async function parsePDF(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            let fullText = "";
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                fullText += textContent.items.map(item => item.str).join(' ') + "\n";
-            }
-            return fullText;
         }
 
         const aiService = {
-            callGemini: async (promptText) => {
-                const response = await puter.ai.chat(promptText);
-                return response.message.content;
+            callOpenRouter: async (promptText) => {
+                try {
+                    const response = await fetch(OPENROUTER_URL, {
+                        method: "POST",
+                        headers: {
+                            "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
+                            "Content-Type": "application/json",
+                            "HTTP-Referer": window.location.href,
+                            "X-Title": "GDG Crackathon App"
+                        },
+                        body: JSON.stringify({
+                            model: OPENROUTER_MODEL,
+                            messages: [
+                                { role: "user", content: promptText }
+                            ]
+                        })
+                    });
+
+                    if(!response.ok) {
+                        const err = await response.json();
+                        throw new Error(err.error?.message || "API Connection Failed");
+                    }
+
+                    const data = await response.json();
+                    return data.choices[0].message.content;
+                } catch (error) {
+                    return "Error connecting to OpenRouter: " + error.message;
+                }
             }
         };
 
@@ -1094,7 +561,7 @@
                 const container = document.getElementById('chat-container');
                 const div = document.createElement('div');
                 div.className = `message ${role === 'user' ? 'user-msg' : 'ai-msg'}`;
-                div.innerHTML = `<strong>${role === 'user' ? 'You' : 'Vertex AI'}</strong>: ${marked.parse(text)}`;
+                div.innerHTML = `<strong>${role === 'user' ? 'You' : 'AI Assistant'}</strong>: ${marked.parse(text)}`;
                 container.appendChild(div);
                 requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
             },
