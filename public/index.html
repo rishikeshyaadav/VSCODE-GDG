@@ -336,7 +336,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-        // 1. IMPORT AUTH
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
         const firebaseConfig = {
@@ -354,7 +353,9 @@
             db = getFirestore(firebaseApp);
             storage = getStorage(firebaseApp);
             auth = getAuth(firebaseApp);
-        } catch (e) { console.error(e); }
+        } catch (e) { 
+            alert("Firebase Init Error: " + e.message);
+        }
 
         window.state = { documents: [], fullContext: "", user: null };
 
@@ -376,21 +377,23 @@
                 });
                 fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-                // 2. AUTH LISTENER
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        window.state.user = user;
-                        document.getElementById('loginBtn').classList.add('hidden');
-                        document.getElementById('user-display').classList.remove('hidden');
-                        document.getElementById('user-name').textContent = user.displayName;
-                        document.getElementById('user-img').src = user.photoURL;
-                        document.getElementById('admin-name').value = user.displayName; // Auto-fill
-                    } else {
-                        window.state.user = null;
-                        document.getElementById('loginBtn').classList.remove('hidden');
-                        document.getElementById('user-display').classList.add('hidden');
-                    }
-                });
+                // Auth Logic
+                if(auth) {
+                    onAuthStateChanged(auth, (user) => {
+                        if (user) {
+                            window.state.user = user;
+                            document.getElementById('loginBtn').classList.add('hidden');
+                            document.getElementById('user-display').classList.remove('hidden');
+                            document.getElementById('user-name').textContent = user.displayName;
+                            document.getElementById('user-img').src = user.photoURL || '';
+                            document.getElementById('admin-name').value = user.displayName;
+                        } else {
+                            window.state.user = null;
+                            document.getElementById('loginBtn').classList.remove('hidden');
+                            document.getElementById('user-display').classList.add('hidden');
+                        }
+                    });
+                }
             },
 
             startApp: () => {
@@ -410,11 +413,8 @@
                 backdrop.classList.toggle('active');
             },
 
-            // 3. SIGN OUT FUNCTION
             signOut: () => {
-                signOut(auth).then(() => {
-                    utils.addMessage('system', 'Signed out.');
-                });
+                if(auth) signOut(auth).then(() => utils.addMessage('system', 'Signed out successfully.'));
             },
 
             clearData: () => {
@@ -441,9 +441,10 @@
 
                 try {
                     const prompt = `
+                        You are an expert document analyst. Use the provided Context below to answer the Query.
+                        If the answer is not in the context, state that clearly.
                         CONTEXT: "${window.state.fullContext.substring(0, 30000)}"
                         QUERY: "${question}"
-                        Answer strictly based on context.
                     `;
                     const response = await aiService.callPuter(prompt);
                     utils.removeLoading(loadingId);
@@ -470,12 +471,18 @@
             }
         };
 
-        // 4. LOGIN BUTTON CLICK
+        // --- UPDATED LOGIN LOGIC WITH ERROR ALERT ---
         document.getElementById('loginBtn').onclick = () => {
-            const provider = new GoogleAuthProvider();
-            signInWithPopup(auth, provider).catch((error) => {
-                console.error("Login failed", error);
-            });
+            if(auth) {
+                const provider = new GoogleAuthProvider();
+                signInWithPopup(auth, provider).catch(e => {
+                    console.error(e);
+                    // Alert the user so they can see the error code
+                    alert("Login Error: " + e.message);
+                });
+            } else {
+                alert("Firebase Auth not initialized. Check console for errors.");
+            }
         };
 
         document.getElementById('sendBtn').onclick = async () => {
@@ -489,8 +496,7 @@
 
             statusEl.innerText = "Sending...";
             try {
-                // Add user ID if logged in
-                const uid = window.state.user ? window.state.user.uid : 'anonymous';
+                const uid = window.state.user ? window.state.user.uid : 'anon';
                 await addDoc(collection(db, "messages"), {
                     sender: nameEl.value,
                     content: msgEl.value,
@@ -501,46 +507,62 @@
                 statusEl.style.color = "var(--success)";
                 msgEl.value = "";
             } catch (e) {
-                statusEl.innerText = "Error.";
+                statusEl.innerText = "Error: " + e.message;
             }
         };
 
         async function handleFiles(files) {
             document.getElementById('processing-status').classList.remove('hidden');
-            for (let i = 0; i < files.length; i++) {
-                if (files[i].type !== 'application/pdf') continue;
-                try {
-                    // Upload to Firebase Storage
-                    // Use user ID folder if logged in, otherwise 'public'
-                    const folder = window.state.user ? `users/${window.state.user.uid}/` : 'public/';
-                    const storageRef = ref(storage, folder + files[i].name);
-                    
-                    await uploadBytes(storageRef, files[i]);
-                    console.log("Uploaded to", folder);
+            const fileArray = Array.from(files);
 
-                    const text = await parsePDF(files[i]);
-                    window.state.documents.push({ name: files[i].name, text: text });
-                    window.state.fullContext += `\n--- ${files[i].name} ---\n${text}\n`;
+            await Promise.all(fileArray.map(async (file) => {
+                if (file.type !== 'application/pdf') return;
+
+                try {
+                    if (storage) {
+                        const folder = window.state.user ? `users/${window.state.user.uid}/` : 'public/';
+                        const storageRef = ref(storage, folder + file.name);
+                        await uploadBytes(storageRef, file);
+                        console.log(`Uploaded ${file.name}`);
+                    }
+
+                    const text = await parsePDF(file);
+                    
+                    window.state.documents.push({ name: file.name, text: text });
+                    window.state.fullContext += `\n--- ${file.name} ---\n${text}\n`;
                     
                     const div = document.createElement('div');
                     div.className = 'file-item';
-                    div.innerHTML = `<i class="fa-solid fa-file-contract" style="color:var(--primary)"></i> <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${files[i].name}</div> <i class="fa-solid fa-cloud-arrow-up" style="color:var(--success); font-size:0.7rem;"></i>`;
+                    div.innerHTML = `<i class="fa-solid fa-file-contract" style="color:var(--primary)"></i> <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${file.name}</div> <i class="fa-solid fa-cloud-arrow-up" style="color:var(--success); font-size:0.7rem;"></i>`;
                     document.getElementById('file-list-container').appendChild(div);
-                } catch (e) { console.error(e); }
-            }
+
+                    if (text.trim().length < 50) {
+                        utils.addMessage('system', `⚠️ Warning: "${file.name}" appears to be a scanned image or empty. I might not be able to read it.`);
+                    }
+
+                } catch (e) { 
+                    console.error("File Error:", e);
+                    utils.addMessage('system', `Error reading ${file.name}: ${e.message}`);
+                }
+            }));
+
             document.getElementById('processing-status').classList.add('hidden');
         }
 
         async function parsePDF(file) {
-            const arrayBuffer = await file.arrayBuffer();
-            const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-            let fullText = "";
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                let fullText = "";
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    fullText += textContent.items.map(item => item.str).join(' ') + "\n";
+                }
+                return fullText;
+            } catch (e) {
+                return "";
             }
-            return fullText;
         }
 
         const aiService = {
@@ -555,7 +577,13 @@
                 const container = document.getElementById('chat-container');
                 const div = document.createElement('div');
                 div.className = `message ${role === 'user' ? 'user-msg' : 'ai-msg'}`;
-                div.innerHTML = `<strong>${role === 'user' ? 'You' : 'Gemini'}</strong>: ${marked.parse(text)}`;
+                if (role === 'system') {
+                    div.style.background = 'rgba(255, 184, 0, 0.1)';
+                    div.style.borderLeft = '3px solid var(--warning)';
+                    div.innerHTML = `<strong><i class="fa-solid fa-circle-info"></i> System:</strong> ${text}`;
+                } else {
+                    div.innerHTML = `<strong>${role === 'user' ? 'You' : 'Gemini'}</strong>: ${marked.parse(text)}`;
+                }
                 container.appendChild(div);
                 requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
             },
