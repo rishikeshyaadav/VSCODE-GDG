@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Enterprise Document Search | Vertex AI</title>
+    <title>Gemini DocuSearch | Google AI</title>
     
     <script src="https://js.puter.com/v2/"></script>
 
@@ -15,8 +15,9 @@
         :root {
             --bg-dark: #0a0a0a;
             --bg-panel: #111111;
-            --primary: #00d4ff; 
-            --primary-dim: rgba(0, 212, 255, 0.1);
+            /* Gemini Blue/Purple Gradient colors */
+            --primary: #4da6ff; 
+            --primary-dim: rgba(77, 166, 255, 0.1);
             --text-main: #e0e0e0;
             --text-muted: #888888;
             --border: #333333;
@@ -88,7 +89,8 @@
         main {
             display: flex;
             flex-direction: column;
-            background: radial-gradient(circle at top right, #131320 0%, var(--bg-dark) 60%);
+            /* Gemini-style subtle gradient background */
+            background: radial-gradient(circle at top right, #1a1f2e 0%, var(--bg-dark) 60%);
             position: relative;
             overflow: hidden;
             height: 100%;
@@ -112,7 +114,7 @@
             font-size: 0.95rem;
             max-width: 100%;
         }
-        .ai-msg { background: rgba(0, 212, 255, 0.03); border-left: 3px solid var(--primary); }
+        .ai-msg { background: rgba(77, 166, 255, 0.05); border-left: 3px solid var(--primary); }
         .user-msg { background: var(--glass); border: 1px solid var(--border); align-self: flex-end; }
 
         /* --- Suggestions & Input --- */
@@ -250,20 +252,29 @@
             animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Sparkle for Gemini branding */
+        .gemini-sparkle {
+            background: linear-gradient(135deg, #4da6ff 0%, #9b72cb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
 <body>
 
     <div id="hero" class="hero-section" style="position: absolute; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
-        <div style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;">
-            <i class="fa-brands fa-google"></i>
+        <div style="font-size: 3rem; margin-bottom: 1rem;">
+            <i class="fa-solid fa-wand-magic-sparkles gemini-sparkle"></i>
         </div>
-        <h1 class="hero-title" style="margin-bottom: 1rem; font-weight: 800; background: linear-gradient(135deg, #fff 0%, var(--primary) 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Vertex AI Agent</h1>
+        <h1 class="hero-title" style="margin-bottom: 1rem; font-weight: 800;">
+            <span class="gemini-sparkle">Google Gemini</span> Agent
+        </h1>
         <p style="color: var(--text-muted); margin-bottom: 2rem;">
-            Enterprise Document Search & RAG
+            Intelligent Document Search & Analysis
         </p>
         <button class="btn" onclick="app.startApp()" style="padding: 1rem 2rem;">
-            <i class="fa-solid fa-rocket"></i> Launch Demo
+            <i class="fa-solid fa-rocket"></i> Launch Gemini
         </button>
     </div>
 
@@ -288,7 +299,7 @@
                     </div>
                 </div>
                 <div id="processing-status" class="hidden" style="font-size: 0.75rem; color: var(--primary); margin-top: 10px; display: flex; align-items: center;">
-                    <span class="spinner"></span> Ingesting...
+                    <span class="spinner"></span> Reading...
                 </div>
                 <div class="file-list" id="file-list-container" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
@@ -326,8 +337,8 @@
 
             <div id="chat-container" class="chat-history">
                 <div class="message ai-msg">
-                    <strong><i class="fa-brands fa-google"></i> Vertex AI:</strong>
-                    <p style="margin-top: 5px;">Ready for Mobile Analysis. Upload a PDF via the menu.</p>
+                    <strong><i class="fa-solid fa-wand-magic-sparkles" style="color: #4da6ff;"></i> Gemini:</strong>
+                    <p style="margin-top: 5px;">Hello! Upload a PDF to begin analysis. (Powered by Puter)</p>
                 </div>
             </div>
 
@@ -341,7 +352,7 @@
             </div>
 
             <div class="input-area">
-                <textarea id="user-input" placeholder="Ask a question..." 
+                <textarea id="user-input" placeholder="Ask Gemini..." 
                           onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); app.sendMessage(); }"></textarea>
                 <button class="btn" style="height: 48px; width: 48px; padding: 0;" onclick="app.sendMessage()">
                     <i class="fa-solid fa-paper-plane"></i>
@@ -352,16 +363,17 @@
 
     <footer>
         <div class="flex items-center gap-2">
-            <i class="fa-brands fa-google-cloud" style="color: var(--primary);"></i>
+            <i class="fa-brands fa-google" style="color: var(--primary);"></i>
             <span>Firebase</span>
         </div>
-        <div>Vertex AI Mobile</div>
+        <div>Gemini Mobile (Puter Engine)</div>
     </footer>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+        // No API Key needed for Puter
         const firebaseConfig = {
             apiKey: "AIzaSyBcTwpQZJoxT_2xJttcj6RCHatSUXV2y0s",
             authDomain: "gdg-crackathon-a7294.firebaseapp.com",
@@ -443,7 +455,7 @@
                         QUERY: "${question}"
                         Answer strictly based on context.
                     `;
-                    const response = await aiService.callGemini(prompt);
+                    const response = await aiService.callPuter(prompt);
                     utils.removeLoading(loadingId);
                     utils.addMessage('ai', response);
                 } catch (error) {
@@ -458,7 +470,7 @@
                 const loadingId = utils.addLoading();
                 try {
                     const prompt = `Audit for contradictions:\n"${window.state.fullContext.substring(0, 25000)}"`;
-                    const response = await aiService.callGemini(prompt);
+                    const response = await aiService.callPuter(prompt);
                     utils.removeLoading(loadingId);
                     utils.addMessage('ai', response);
                 } catch (e) {
@@ -523,7 +535,8 @@
         }
 
         const aiService = {
-            callGemini: async (promptText) => {
+            callPuter: async (promptText) => {
+                // Calls Puter.js (Free, no key)
                 const response = await puter.ai.chat(promptText);
                 return response.message.content;
             }
@@ -534,7 +547,7 @@
                 const container = document.getElementById('chat-container');
                 const div = document.createElement('div');
                 div.className = `message ${role === 'user' ? 'user-msg' : 'ai-msg'}`;
-                div.innerHTML = `<strong>${role === 'user' ? 'You' : 'Vertex AI'}</strong>: ${marked.parse(text)}`;
+                div.innerHTML = `<strong>${role === 'user' ? 'You' : 'Gemini'}</strong>: ${marked.parse(text)}`;
                 container.appendChild(div);
                 requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
             },
