@@ -2,33 +2,31 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Document Detective | Vertex AI & Firebase</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gemini DocuSearch | Google AI</title>
     
-    <!-- PDF.js for PDF Parsing -->
+    <script src="https://js.puter.com/v2/"></script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <!-- Marked for Markdown Rendering -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.2/marked.min.js"></script>
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
         :root {
             --bg-dark: #0a0a0a;
             --bg-panel: #111111;
-            --primary: #00d4ff; /* Cyan */
-            --primary-dim: rgba(0, 212, 255, 0.1);
+            --primary: #4da6ff; 
+            --primary-dim: rgba(77, 166, 255, 0.1);
             --text-main: #e0e0e0;
             --text-muted: #888888;
             --border: #333333;
             --glass: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.05);
             --success: #00ff9d;
             --warning: #ffb800;
             --danger: #ff4d4d;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         
         body {
             background-color: var(--bg-dark);
@@ -39,23 +37,13 @@
             overflow: hidden;
         }
 
-        /* --- Utility & Typography --- */
+        /* --- Utility --- */
         .hidden { display: none !important; }
-        .flex { display: flex; }
-        .flex-col { flex-direction: column; }
-        .items-center { align-items: center; }
-        .justify-center { justify-content: center; }
-        .justify-between { justify-content: space-between; }
         .w-full { width: 100%; }
-        .h-full { height: 100%; }
-        .p-4 { padding: 1rem; }
+        .flex { display: flex; }
         .gap-2 { gap: 0.5rem; }
-        .gap-4 { gap: 1rem; }
-        
-        code { font-family: 'Consolas', 'Monaco', monospace; background: #222; padding: 2px 5px; border-radius: 4px; color: var(--primary); }
-        pre { background: #1a1a1a; padding: 10px; border-radius: 8px; overflow-x: auto; margin: 10px 0; border: 1px solid var(--border); }
 
-        /* --- Components --- */
+        /* --- Buttons --- */
         .btn {
             background: var(--glass);
             border: 1px solid var(--primary);
@@ -63,438 +51,403 @@
             padding: 0.6rem 1.2rem;
             cursor: pointer;
             border-radius: 4px;
-            transition: all 0.2s;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
         }
-        .btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary-dim); }
-        .btn-secondary { border-color: var(--border); color: var(--text-main); }
-        .btn-secondary:hover { background: #222; color: #fff; border-color: #555; box-shadow: none; }
+        .btn:active { transform: scale(0.98); }
+        .btn-secondary { border-color: var(--border); color: var(--text-muted); }
         .btn-danger { border-color: var(--danger); color: var(--danger); }
-        .btn-danger:hover { background: var(--danger); color: white; }
 
         /* --- Layout --- */
         #app-container {
             display: grid;
-            grid-template-columns: 300px 1fr;
-            height: calc(100vh - 40px); /* Minus footer */
+            grid-template-columns: 320px 1fr; 
+            height: calc(100vh - 40px);
             opacity: 0;
             transition: opacity 0.5s ease;
+            overflow: hidden;
+            position: relative;
         }
 
-        /* --- Sidebar (Uploads) --- */
+        /* --- Sidebar --- */
         aside {
             background: var(--bg-panel);
             border-right: 1px solid var(--border);
             padding: 1rem;
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 1.5rem;
+            overflow-y: auto;
+            height: 100%;
+            z-index: 100;
         }
 
-        .upload-zone {
-            border: 2px dashed var(--border);
-            border-radius: 8px;
-            padding: 2rem 1rem;
-            text-align: center;
-            transition: all 0.3s;
-            background: var(--glass);
-        }
-        .upload-zone.dragover { border-color: var(--primary); background: var(--primary-dim); }
-        
-        .file-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 0.5rem; }
-        .file-item {
-            background: #1a1a1a;
-            border: 1px solid var(--border);
-            padding: 0.8rem;
-            border-radius: 6px;
+        /* --- User Profile Section --- */
+        .user-profile {
             display: flex;
             align-items: center;
             gap: 10px;
-            font-size: 0.9rem;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
         }
-        .file-icon { color: var(--danger); font-size: 1.2rem; }
-        
+        .user-avatar {
+            width: 32px; height: 32px; border-radius: 50%; background: var(--primary);
+            display: flex; align-items: center; justify-content: center; font-weight: bold; color: black;
+        }
+        .user-info { font-size: 0.8rem; overflow: hidden; }
+        .user-name { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .user-status { font-size: 0.7rem; color: var(--success); }
+
         /* --- Main Chat Area --- */
         main {
             display: flex;
             flex-direction: column;
-            background: radial-gradient(circle at top right, #1a1a2e 0%, var(--bg-dark) 40%);
+            background: radial-gradient(circle at top right, #1a1f2e 0%, var(--bg-dark) 60%);
             position: relative;
+            overflow: hidden;
+            height: 100%;
+            width: 100%;
         }
 
         .chat-history {
             flex: 1;
             overflow-y: auto;
-            padding: 2rem;
+            padding: 2rem 15%;
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
+            scroll-behavior: smooth;
         }
 
         .message {
-            max-width: 80%;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
+            padding: 1.5rem;
+            border-radius: 8px;
             line-height: 1.6;
             font-size: 0.95rem;
-            animation: slideIn 0.3s ease-out;
-            position: relative;
+            max-width: 100%;
+        }
+        .ai-msg { background: rgba(77, 166, 255, 0.05); border-left: 3px solid var(--primary); }
+        .user-msg { background: var(--glass); border: 1px solid var(--border); align-self: flex-end; }
+
+        .suggestions-wrapper {
+            padding: 0 15% 1rem 15%;
+            background: var(--bg-panel);
+            border-top: 1px solid var(--border);
+            overflow-x: auto;
+            white-space: nowrap;
         }
         
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .user-msg {
-            align-self: flex-end;
-            background: var(--glass);
+        .chips-container { display: flex; gap: 10px; }
+        
+        .chip {
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border);
-            border-bottom-right-radius: 2px;
-        }
-
-        .ai-msg {
-            align-self: flex-start;
-            background: rgba(0, 212, 255, 0.05);
-            border: 1px solid var(--primary-dim);
-            border-bottom-left-radius: 2px;
-        }
-        
-        .ai-msg strong { color: var(--primary); }
-        .citation { 
-            display: inline-block; 
-            font-size: 0.75rem; 
-            background: #222; 
-            padding: 2px 6px; 
-            border-radius: 4px; 
-            margin-left: 5px; 
-            border: 1px solid #444; 
-            cursor: help;
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: inline-flex; align-items: center; gap: 6px;
+            flex-shrink: 0;
         }
 
         .input-area {
-            padding: 1.5rem;
+            padding: 0 15% 1.5rem 15%;
             background: var(--bg-panel);
-            border-top: 1px solid var(--border);
             display: flex;
             gap: 1rem;
+            align-items: flex-end;
+            flex-shrink: 0;
         }
 
         textarea {
             flex: 1;
-            background: #0a0a0a;
+            background: #050505;
             border: 1px solid var(--border);
             color: white;
-            padding: 10px;
+            padding: 12px;
             border-radius: 6px;
             resize: none;
             height: 50px;
+            font-family: inherit;
         }
         textarea:focus { outline: none; border-color: var(--primary); }
 
-        /* --- Modals & Overlays --- */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(5px);
-            z-index: 1000;
-            display: flex; align-items: center; justify-content: center;
-        }
-        .modal {
-            background: #151515;
-            border: 1px solid var(--border);
-            padding: 2rem;
-            border-radius: 12px;
-            width: 90%; max-width: 500px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        .mobile-header-btn { display: none; }
+        .mobile-close-btn { display: none; }
+        .sidebar-backdrop { display: none; }
+
+        @media (max-width: 768px) {
+            #app-container { display: block; position: relative; }
+            aside { position: fixed; top: 0; left: -100%; width: 85%; height: 100%; transition: left 0.3s ease; box-shadow: 10px 0 50px rgba(0,0,0,0.5); border-right: 1px solid var(--primary-dim); }
+            aside.open { left: 0; }
+            .mobile-header-btn { display: flex; padding: 8px 12px; background: var(--glass); border: 1px solid var(--border); border-radius: 4px; color: var(--text-main); cursor: pointer; }
+            .mobile-close-btn { display: block; text-align: right; margin-bottom: 10px; }
+            .sidebar-backdrop { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 90; backdrop-filter: blur(2px); }
+            .sidebar-backdrop.active { display: block; }
+            .chat-history { padding: 1rem 1rem; }
+            .input-area { padding: 0 1rem 1rem 1rem; }
+            .suggestions-wrapper { padding: 0 1rem 1rem 1rem; }
+            .hero-title { font-size: 2.2rem; }
+            #hero p { padding: 0 20px; font-size: 1rem; }
         }
 
-        .hero-section {
-            position: absolute; top:0; left:0; width:100%; height:100%;
-            background: var(--bg-dark);
-            z-index: 50;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center;
-        }
-        .hero-title {
-            font-size: 3rem;
-            background: linear-gradient(to right, #fff, var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 1rem;
-        }
+        .admin-contact-box { background: #0f0f0f; border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-top: auto; }
+        input.admin-input { width: 100%; background: #1a1a1a; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 4px; margin-bottom: 8px; }
 
-        /* Footer */
-        footer {
-            height: 40px;
-            background: #050505;
-            border-top: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 1rem;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            z-index: 60;
-        }
-        footer a { color: var(--primary); text-decoration: none; }
-
-        /* Loading Spinner */
-        .spinner {
-            width: 20px; height: 20px;
-            border: 2px solid var(--bg-dark);
-            border-top: 2px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            display: inline-block;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Results Table */
-        .contradiction-table {
-            width: 100%; border-collapse: collapse; margin-top: 10px;
-            font-size: 0.9rem;
-        }
-        .contradiction-table th, .contradiction-table td {
-            padding: 8px; border: 1px solid var(--border); text-align: left;
-        }
-        .contradiction-table th { background: #222; }
-        .row-danger { background: rgba(255, 77, 77, 0.1); border-left: 3px solid var(--danger); }
-        .row-warning { background: rgba(255, 184, 0, 0.1); border-left: 3px solid var(--warning); }
-
+        footer { height: 40px; background: #050505; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: center; padding: 0 10px; font-size: 0.65rem; color: var(--text-muted); z-index: 60; }
+        .upload-zone { border: 2px dashed var(--border); border-radius: 8px; padding: 2rem 1rem; text-align: center; background: var(--glass); }
+        .file-item { background: #151515; border: 1px solid var(--border); padding: 0.8rem; border-radius: 6px; display: flex; align-items: center; gap: 10px; font-size: 0.85rem; }
+        
+        .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.1); border-top: 2px solid var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; display: inline-block; margin-right: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .gemini-sparkle { background: linear-gradient(135deg, #4da6ff 0%, #9b72cb 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     </style>
 </head>
 <body>
 
-    <!-- HERO SECTION -->
-    <div id="hero" class="hero-section">
-        <div style="font-size: 4rem; color: var(--primary); margin-bottom: 1rem;">
-            <i class="fa-solid fa-file-shield"></i>
+    <div id="hero" class="hero-section" style="position: absolute; top:0; left:0; width:100%; height:100%; background: var(--bg-dark); z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 1rem;">
+            <i class="fa-solid fa-wand-magic-sparkles gemini-sparkle"></i>
         </div>
-        <h1 class="hero-title">AI Document Detective</h1>
-        <p style="color: var(--text-muted); font-size: 1.2rem; margin-bottom: 2rem;">
-            Powered by Vertex AI & Gemini 1.5
+        <h1 class="hero-title" style="margin-bottom: 1rem; font-weight: 800;">
+            <span class="gemini-sparkle">Google Gemini</span> Agent
+        </h1>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">
+            Intelligent Document Search & Analysis
         </p>
-        <div style="display:flex; gap:1rem;">
-            <button class="btn" onclick="app.startApp()">Launch System</button>
-            <button class="btn btn-secondary" onclick="app.toggleSettings()">Config API</button>
-        </div>
+        <button class="btn" onclick="app.startApp()" style="padding: 1rem 2rem;">
+            <i class="fa-solid fa-rocket"></i> Launch Gemini
+        </button>
     </div>
 
-    <!-- MAIN APP LAYOUT -->
+    <div id="mobile-backdrop" class="sidebar-backdrop" onclick="app.toggleSidebar()"></div>
+
     <div id="app-container">
-        <!-- Sidebar -->
-        <aside>
-            <div style="font-weight: bold; color: white; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-folder-open" style="color:var(--primary)"></i> EVIDENCE LOCKER
-            </div>
-            
-            <div id="drop-zone" class="upload-zone">
-                <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2rem; color: var(--text-muted); margin-bottom: 10px;"></i>
-                <p style="font-size: 0.9rem;">Drag PDF contracts here</p>
-                <input type="file" id="file-input" accept="application/pdf" multiple hidden>
-                <button class="btn btn-secondary" style="margin-top: 10px; font-size: 0.7rem;" onclick="document.getElementById('file-input').click()">Browse Files</button>
+        <aside id="app-sidebar">
+            <div class="mobile-close-btn">
+                <button class="btn btn-secondary" style="border:none;" onclick="app.toggleSidebar()"><i class="fa-solid fa-xmark"></i> Close</button>
             </div>
 
-            <div id="processing-status" class="hidden" style="font-size: 0.8rem; color: var(--primary);">
-                <span class="spinner"></span> Processing documents...
-            </div>
-
-            <div class="file-list" id="file-list-container">
-                <!-- JS will populate files here -->
-            </div>
-
-            <div style="margin-top: auto;">
-                <button class="btn w-full btn-danger" onclick="app.clearData()">
-                    <i class="fa-solid fa-trash"></i> Clear All
+            <div id="auth-section">
+                <button id="loginBtn" class="btn w-full" style="margin-bottom: 15px; border-color: var(--text-muted); color: white;">
+                    <i class="fa-brands fa-google"></i> Sign in with Google
                 </button>
+                <div id="user-display" class="user-profile hidden">
+                    <img id="user-img" src="" class="user-avatar" alt="U">
+                    <div class="user-info">
+                        <div id="user-name" class="user-name">User</div>
+                        <div class="user-status">● Online</div>
+                    </div>
+                    <button onclick="app.signOut()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; margin-left:auto;"><i class="fa-solid fa-right-from-bracket"></i></button>
+                </div>
+            </div>
+
+            <div>
+                <div style="font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">
+                    Knowledge Base
+                </div>
+                <div style="margin-top: 15px;">
+                    <div id="drop-zone" class="upload-zone">
+                        <i class="fa-solid fa-file-pdf" style="font-size: 1.5rem; color: var(--text-muted); margin-bottom: 10px;"></i>
+                        <p style="font-size: 0.8rem; color: #888;">Tap to Upload PDF</p>
+                        <input type="file" id="file-input" accept="application/pdf" multiple hidden>
+                        <button class="btn btn-secondary" style="margin-top: 10px; width: 100%;" onclick="document.getElementById('file-input').click()">Select Files</button>
+                    </div>
+                </div>
+                <div id="processing-status" class="hidden" style="font-size: 0.75rem; color: var(--primary); margin-top: 10px; display: flex; align-items: center;">
+                    <span class="spinner"></span> Uploading & Reading...
+                </div>
+                <div class="file-list" id="file-list-container" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;"></div>
+            </div>
+
+            <div class="admin-contact-box">
+                <div style="font-size: 0.8rem; font-weight: 700; color: white; margin-bottom: 10px;">
+                    <i class="fa-solid fa-envelope"></i> Contact Admin
+                </div>
+                <input type="text" id="admin-name" class="admin-input" placeholder="Your Name">
+                <input type="text" id="admin-msg" class="admin-input" placeholder="Message">
+                <button id="sendBtn" class="btn w-full" style="font-size: 0.7rem;">Send to Firestore</button>
+                <p id="db-status" style="font-size: 0.7rem; margin-top: 8px; min-height: 1rem;"></p>
+            </div>
+
+            <div style="margin-top: 10px;">
+                <button class="btn btn-danger w-full" onclick="app.clearData()">Reset</button>
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main>
-            <div style="padding: 1rem; background: rgba(0,0,0,0.4); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; gap: 10px;">
-                    <button class="btn" onclick="app.runContradictionScan()">
-                        <i class="fa-solid fa-magnifying-glass-chart"></i> Auto-Scan Contradictions
+            <div style="padding: 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2); flex-shrink: 0;">
+                <div class="flex gap-2 align-items-center">
+                    <div class="mobile-header-btn" onclick="app.toggleSidebar()">
+                        <i class="fa-solid fa-bars"></i>
+                    </div>
+                    
+                    <button class="btn btn-secondary" onclick="app.runContradictionScan()">
+                        <i class="fa-solid fa-bug"></i> <span style="display:none; @media(min-width:768px){display:inline;}">Audit</span>
                     </button>
                 </div>
-                <button class="btn btn-secondary" onclick="app.exportReport()">
-                    <i class="fa-solid fa-download"></i> Export
-                </button>
+                <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 5px;">
+                    <i class="fa-solid fa-circle" style="color: var(--success); font-size: 8px;"></i> Online
+                </div>
             </div>
 
             <div id="chat-container" class="chat-history">
-                <!-- Welcome Message -->
                 <div class="message ai-msg">
-                    <strong><i class="fa-solid fa-robot"></i> System:</strong>
-                    <br>Ready to analyze. Upload PDF contracts to the Evidence Locker.
-                    <br><br>
-                    Try asking:
-                    <ul>
-                        <li>"Summarize the payment terms."</li>
-                        <li>"Are there any penalty clauses?"</li>
-                        <li>"Find contradictions between the NDA and the Service Agreement."</li>
-                    </ul>
+                    <strong><i class="fa-solid fa-wand-magic-sparkles" style="color: #4da6ff;"></i> Gemini:</strong>
+                    <p style="margin-top: 5px;">Hello! I'm ready. Sign in to save your session.</p>
+                </div>
+            </div>
+
+            <div class="suggestions-wrapper">
+                <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 8px;">QUICK ACTIONS:</div>
+                <div class="chips-container">
+                    <div class="chip" onclick="app.sendMessage('Identify the top 3 biggest risks.')"><i class="fa-solid fa-triangle-exclamation"></i> Risks</div>
+                    <div class="chip" onclick="app.sendMessage('List termination clauses.')"><i class="fa-solid fa-hand"></i> Termination</div>
+                    <div class="chip" onclick="app.sendMessage('Summarize payment terms.')"><i class="fa-solid fa-money-bill"></i> Payments</div>
                 </div>
             </div>
 
             <div class="input-area">
-                <textarea id="user-input" placeholder="Ask a question about the uploaded documents..." onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); app.sendMessage(); }"></textarea>
-                <button class="btn" onclick="app.sendMessage()">
+                <textarea id="user-input" placeholder="Ask Gemini..." 
+                          onkeydown="if(event.key === 'Enter' && !event.shiftKey){ event.preventDefault(); app.sendMessage(); }"></textarea>
+                <button class="btn" style="height: 48px; width: 48px; padding: 0;" onclick="app.sendMessage()">
                     <i class="fa-solid fa-paper-plane"></i>
                 </button>
             </div>
         </main>
     </div>
 
-    <!-- SETTINGS MODAL -->
-    <div id="settings-modal" class="modal-overlay hidden">
-        <div class="modal">
-            <h2 style="margin-bottom: 1rem;">System Configuration</h2>
-            <div class="flex flex-col gap-2">
-                <label style="font-size: 0.9rem; color: var(--text-muted);">Gemini API Key</label>
-                <input type="password" id="api-key-input" placeholder="Paste your Google AI Studio key here" 
-                       style="background: #222; border: 1px solid var(--border); color: white; padding: 10px; border-radius: 4px; width: 100%;">
-                <p style="font-size: 0.75rem; color: #666;">
-                    Key is stored locally in your browser. Get one at <a href="https://aistudio.google.com/" target="_blank" style="color:var(--primary)">Google AI Studio</a>.
-                </p>
-            </div>
-            <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
-                <button class="btn btn-secondary" onclick="app.toggleSettings()">Close</button>
-                <button class="btn" onclick="app.saveSettings()">Save Configuration</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- FOOTER -->
     <footer>
-        <div>
-            <i class="fa-solid fa-fire"></i> Deployed on <strong>Firebase Hosting</strong>
+        <div class="flex items-center gap-2">
+            <i class="fa-brands fa-google" style="color: var(--primary);"></i>
+            <span>Firebase</span>
         </div>
-        <div>
-            Vertex AI Search & Conversation Architecture | <a href="#" onclick="app.toggleSettings()">Settings</a>
-        </div>
+        <div>Gemini Mobile (Puter Engine)</div>
     </footer>
 
-    <script>
-        // --- CONFIG & STATE ---
-        // Configure PDF.js Worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+        // 1. IMPORT AUTH
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        const state = {
-            documents: [], // { name: string, text: string }
-            fullContext: "", // Combined text of all docs
-            apiKey: localStorage.getItem('gemini_api_key') || "",
-            history: []
+        const firebaseConfig = {
+            apiKey: "AIzaSyBcTwpQZJoxT_2xJttcj6RCHatSUXV2y0s",
+            authDomain: "gdg-crackathon-a7294.firebaseapp.com",
+            projectId: "gdg-crackathon-a7294",
+            storageBucket: "gdg-crackathon-a7294.firebasestorage.app",
+            messagingSenderId: "752107073890",
+            appId: "1:752107073890:web:0cdcff88737c266a6187c3b"
         };
 
-        // --- APP CONTROLLER ---
-        const app = {
+        let db, storage, auth;
+        try {
+            const firebaseApp = initializeApp(firebaseConfig);
+            db = getFirestore(firebaseApp);
+            storage = getStorage(firebaseApp);
+            auth = getAuth(firebaseApp);
+        } catch (e) { console.error(e); }
+
+        window.state = { documents: [], fullContext: "", user: null };
+
+        window.app = {
             init: () => {
-                // Drag & Drop Listeners
+                pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
                 const dropZone = document.getElementById('drop-zone');
                 const fileInput = document.getElementById('file-input');
 
                 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                    dropZone.addEventListener(eventName, preventDefaults, false);
+                    dropZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
                 });
-
-                function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
 
                 dropZone.addEventListener('dragover', () => dropZone.classList.add('dragover'));
                 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
-                dropZone.addEventListener('drop', handleDrop);
+                dropZone.addEventListener('drop', (e) => {
+                    dropZone.classList.remove('dragover');
+                    handleFiles(e.dataTransfer.files);
+                });
                 fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
-                // Check API Key
-                if(!state.apiKey) {
-                    setTimeout(() => app.toggleSettings(), 1000);
-                }
+                // 2. AUTH LISTENER
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        window.state.user = user;
+                        document.getElementById('loginBtn').classList.add('hidden');
+                        document.getElementById('user-display').classList.remove('hidden');
+                        document.getElementById('user-name').textContent = user.displayName;
+                        document.getElementById('user-img').src = user.photoURL;
+                        document.getElementById('admin-name').value = user.displayName; // Auto-fill
+                    } else {
+                        window.state.user = null;
+                        document.getElementById('loginBtn').classList.remove('hidden');
+                        document.getElementById('user-display').classList.add('hidden');
+                    }
+                });
             },
 
             startApp: () => {
-                document.getElementById('hero').classList.add('hidden');
-                document.getElementById('app-container').classList.remove('hidden');
-                document.getElementById('app-container').style.opacity = '1';
+                document.getElementById('hero').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('hero').classList.add('hidden');
+                    const container = document.getElementById('app-container');
+                    container.classList.remove('hidden');
+                    container.style.opacity = '1';
+                }, 500);
             },
 
-            toggleSettings: () => {
-                const modal = document.getElementById('settings-modal');
-                modal.classList.toggle('hidden');
-                if(!modal.classList.contains('hidden')) {
-                    document.getElementById('api-key-input').value = state.apiKey;
-                }
+            toggleSidebar: () => {
+                const sidebar = document.getElementById('app-sidebar');
+                const backdrop = document.getElementById('mobile-backdrop');
+                sidebar.classList.toggle('open');
+                backdrop.classList.toggle('active');
             },
 
-            saveSettings: () => {
-                const key = document.getElementById('api-key-input').value.trim();
-                if(key) {
-                    state.apiKey = key;
-                    localStorage.setItem('gemini_api_key', key);
-                    alert('System Connected: API Key Saved.');
-                    app.toggleSettings();
-                } else {
-                    alert('Please enter a valid API key.');
-                }
+            // 3. SIGN OUT FUNCTION
+            signOut: () => {
+                signOut(auth).then(() => {
+                    utils.addMessage('system', 'Signed out.');
+                });
             },
 
             clearData: () => {
-                state.documents = [];
-                state.fullContext = "";
+                window.state.documents = [];
+                window.state.fullContext = "";
                 document.getElementById('file-list-container').innerHTML = '';
                 document.getElementById('chat-container').innerHTML = '';
-                utils.addMessage('system', 'Evidence locker cleared. Ready for new documents.');
             },
 
-            // --- AI LOGIC ---
-            sendMessage: async () => {
+            sendMessage: async (manualText) => {
                 const input = document.getElementById('user-input');
-                const question = input.value.trim();
-                if (!question) return;
+                const question = manualText || input.value.trim();
                 
-                if (!state.apiKey) {
-                    alert('Missing Authorization: Please configure your API Key in settings.');
-                    app.toggleSettings();
+                if (!question) return;
+
+                if (window.state.documents.length === 0) {
+                    utils.addMessage('system', 'Please upload a PDF first (Check Menu).');
                     return;
                 }
 
-                if (state.documents.length === 0) {
-                    alert('No Evidence: Please upload a PDF contract first.');
-                    return;
-                }
-
-                // Render User Message
                 utils.addMessage('user', question);
                 input.value = '';
-
-                // Show loading
                 const loadingId = utils.addLoading();
 
                 try {
-                    // Gemini Prompt Engineering
                     const prompt = `
-                        Role: You are an expert Legal AI Assistant named "DocuDetective".
-                        Context: The user has uploaded the following contract text: 
-                        "${state.fullContext.substring(0, 30000)}" (truncated if too long).
-                        
-                        Task: Answer the user's question: "${question}".
-                        
-                        Constraints:
-                        1. Only answer based on the provided text.
-                        2. If the answer is not in the text, state that.
-                        3. Cite specific clauses or section numbers if available.
-                        4. Format output in Markdown.
-                        5. Be professional, concise, and objective.
+                        CONTEXT: "${window.state.fullContext.substring(0, 30000)}"
+                        QUERY: "${question}"
+                        Answer strictly based on context.
                     `;
-
-                    const response = await aiService.callGemini(prompt);
+                    const response = await aiService.callPuter(prompt);
                     utils.removeLoading(loadingId);
                     utils.addMessage('ai', response);
-
                 } catch (error) {
                     utils.removeLoading(loadingId);
                     utils.addMessage('system', `Error: ${error.message}`);
@@ -502,169 +455,128 @@
             },
 
             runContradictionScan: async () => {
-                if (state.documents.length === 0) return alert("Upload documents first.");
-                if (!state.apiKey) return app.toggleSettings();
-
-                utils.addMessage('user', "Run auto-scan for contradictions.");
+                if (window.state.documents.length === 0) return;
+                utils.addMessage('user', "Running Audit...");
                 const loadingId = utils.addLoading();
-
                 try {
-                    const prompt = `
-                        Role: Legal Compliance Auditor.
-                        Context: Provided contract text.
-                        Task: Analyze the entire text for:
-                        1. Internal contradictions (Clause A says X, Clause B says Not X).
-                        2. Ambiguous payment terms.
-                        3. Missing standard termination clauses.
-                        
-                        Output Format:
-                        Create a Markdown table with columns: "Issue Type", "Description", "Severity (High/Medium)".
-                        If no contradictions are found, clearly state "No contradictions detected."
-                    `;
-                    
-                    const response = await aiService.callGemini(prompt);
+                    const prompt = `Audit for contradictions:\n"${window.state.fullContext.substring(0, 25000)}"`;
+                    const response = await aiService.callPuter(prompt);
                     utils.removeLoading(loadingId);
                     utils.addMessage('ai', response);
                 } catch (e) {
                     utils.removeLoading(loadingId);
-                    utils.addMessage('system', `Scan failed: ${e.message}`);
+                    utils.addMessage('system', `Error: ${e.message}`);
                 }
-            },
-            
-            exportReport: () => {
-                const chatContent = document.getElementById('chat-container').innerText;
-                const blob = new Blob([chatContent], { type: 'text/plain' });
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'AI_Analysis_Report.txt';
-                a.click();
             }
         };
 
-        // --- PDF PROCESSING ---
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            handleFiles(files);
-            document.getElementById('drop-zone').classList.remove('dragover');
-        }
+        // 4. LOGIN BUTTON CLICK
+        document.getElementById('loginBtn').onclick = () => {
+            const provider = new GoogleAuthProvider();
+            signInWithPopup(auth, provider).catch((error) => {
+                console.error("Login failed", error);
+            });
+        };
+
+        document.getElementById('sendBtn').onclick = async () => {
+            const nameEl = document.getElementById('admin-name');
+            const msgEl = document.getElementById('admin-msg');
+            const statusEl = document.getElementById('db-status');
+            
+            if(!nameEl.value || !msgEl.value) {
+                statusEl.innerText = "Empty fields."; return;
+            }
+
+            statusEl.innerText = "Sending...";
+            try {
+                // Add user ID if logged in
+                const uid = window.state.user ? window.state.user.uid : 'anonymous';
+                await addDoc(collection(db, "messages"), {
+                    sender: nameEl.value,
+                    content: msgEl.value,
+                    uid: uid,
+                    timestamp: new Date()
+                });
+                statusEl.innerText = "Sent.";
+                statusEl.style.color = "var(--success)";
+                msgEl.value = "";
+            } catch (e) {
+                statusEl.innerText = "Error.";
+            }
+        };
 
         async function handleFiles(files) {
-            const status = document.getElementById('processing-status');
-            status.classList.remove('hidden');
-
+            document.getElementById('processing-status').classList.remove('hidden');
             for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                if (file.type !== 'application/pdf') continue;
-
+                if (files[i].type !== 'application/pdf') continue;
                 try {
-                    const text = await parsePDF(file);
+                    // Upload to Firebase Storage
+                    // Use user ID folder if logged in, otherwise 'public'
+                    const folder = window.state.user ? `users/${window.state.user.uid}/` : 'public/';
+                    const storageRef = ref(storage, folder + files[i].name);
                     
-                    // Update State
-                    state.documents.push({ name: file.name, text: text });
-                    state.fullContext += `\n--- DOCUMENT: ${file.name} ---\n${text}\n`;
+                    await uploadBytes(storageRef, files[i]);
+                    console.log("Uploaded to", folder);
 
-                    // Update UI
-                    const fileDiv = document.createElement('div');
-                    fileDiv.className = 'file-item';
-                    fileDiv.innerHTML = `
-                        <i class="fa-solid fa-file-pdf file-icon"></i>
-                        <div style="overflow:hidden;">
-                            <div style="font-weight:bold;">${file.name}</div>
-                            <div style="font-size:0.7rem; color:#888;">${(file.size/1024).toFixed(1)} KB | processed</div>
-                        </div>
-                    `;
-                    document.getElementById('file-list-container').appendChild(fileDiv);
-
-                } catch (err) {
-                    console.error(err);
-                    alert(`Failed to parse ${file.name}`);
-                }
+                    const text = await parsePDF(files[i]);
+                    window.state.documents.push({ name: files[i].name, text: text });
+                    window.state.fullContext += `\n--- ${files[i].name} ---\n${text}\n`;
+                    
+                    const div = document.createElement('div');
+                    div.className = 'file-item';
+                    div.innerHTML = `<i class="fa-solid fa-file-contract" style="color:var(--primary)"></i> <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">${files[i].name}</div> <i class="fa-solid fa-cloud-arrow-up" style="color:var(--success); font-size:0.7rem;"></i>`;
+                    document.getElementById('file-list-container').appendChild(div);
+                } catch (e) { console.error(e); }
             }
-            status.classList.add('hidden');
+            document.getElementById('processing-status').classList.add('hidden');
         }
 
         async function parsePDF(file) {
             const arrayBuffer = await file.arrayBuffer();
             const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
             let fullText = "";
-
             for (let i = 1; i <= pdf.numPages; i++) {
                 const page = await pdf.getPage(i);
                 const textContent = await page.getTextContent();
-                const pageText = textContent.items.map(item => item.str).join(' ');
-                fullText += `[Page ${i}] ${pageText}\n`;
+                fullText += textContent.items.map(item => item.str).join(' ') + "\n";
             }
             return fullText;
         }
 
-        // --- AI SERVICE (GEMINI) ---
         const aiService = {
-            callGemini: async (promptText) => {
-                const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.apiKey}`;
-                
-                const payload = {
-                    contents: [{
-                        parts: [{ text: promptText }]
-                    }]
-                };
-
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
-                
-                const data = await response.json();
-                return data.candidates[0].content.parts[0].text;
+            callPuter: async (promptText) => {
+                const response = await puter.ai.chat(promptText);
+                return response.message.content;
             }
         };
 
-        // --- UI UTILS ---
         const utils = {
             addMessage: (role, text) => {
                 const container = document.getElementById('chat-container');
                 const div = document.createElement('div');
                 div.className = `message ${role === 'user' ? 'user-msg' : 'ai-msg'}`;
-                
-                let icon = role === 'user' ? '<i class="fa-solid fa-user"></i>' : '<i class="fa-solid fa-robot"></i>';
-                let header = role === 'user' ? 'You' : 'AI Detective';
-                
-                // Parse Markdown
-                const parsedText = marked.parse(text);
-
-                div.innerHTML = `
-                    <strong>${icon} ${header}:</strong>
-                    <div style="margin-top: 5px;">${parsedText}</div>
-                `;
+                div.innerHTML = `<strong>${role === 'user' ? 'You' : 'Gemini'}</strong>: ${marked.parse(text)}`;
                 container.appendChild(div);
-                container.scrollTop = container.scrollHeight;
+                requestAnimationFrame(() => { container.scrollTop = container.scrollHeight; });
             },
-
             addLoading: () => {
                 const container = document.getElementById('chat-container');
-                const id = 'loading-' + Date.now();
+                const id = 'l-' + Date.now();
                 const div = document.createElement('div');
                 div.id = id;
                 div.className = 'message ai-msg';
-                div.innerHTML = `<span class="spinner"></span> Analyzing document structure...`;
+                div.innerHTML = `<span class="spinner"></span> Thinking...`;
                 container.appendChild(div);
                 container.scrollTop = container.scrollHeight;
                 return id;
             },
-
             removeLoading: (id) => {
                 const el = document.getElementById(id);
-                if (el) el.remove();
+                if(el) el.remove();
             }
         };
 
-        // Init App
-        app.init();
-
+        window.app.init();
     </script>
 </body>
 </html>
