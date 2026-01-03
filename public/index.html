@@ -98,6 +98,7 @@
         .user-avatar {
             width: 32px; height: 32px; border-radius: 50%; background: var(--primary);
             display: flex; align-items: center; justify-content: center; font-weight: bold; color: black;
+            object-fit: cover;
         }
         .user-info { font-size: 0.8rem; overflow: hidden; }
         .user-name { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -130,6 +131,7 @@
             line-height: 1.6;
             font-size: 0.95rem;
             max-width: 100%;
+            word-wrap: break-word;
         }
         .ai-msg { background: rgba(77, 166, 255, 0.05); border-left: 3px solid var(--primary); }
         .user-msg { background: var(--glass); border: 1px solid var(--border); align-self: flex-end; }
@@ -240,12 +242,12 @@
                     <i class="fa-brands fa-google"></i> Sign in with Google
                 </button>
                 <div id="user-display" class="user-profile hidden">
-                    <img id="user-img" src="" class="user-avatar" alt="U">
+                    <img id="user-img" src="" class="user-avatar" alt="User">
                     <div class="user-info">
                         <div id="user-name" class="user-name">User</div>
                         <div class="user-status">● Online</div>
                     </div>
-                    <button onclick="app.signOut()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; margin-left:auto;"><i class="fa-solid fa-right-from-bracket"></i></button>
+                    <button onclick="app.signOut()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; margin-left:auto;" title="Sign Out"><i class="fa-solid fa-right-from-bracket"></i></button>
                 </div>
             </div>
 
@@ -262,7 +264,7 @@
                     </div>
                 </div>
                 <div id="processing-status" class="hidden" style="font-size: 0.75rem; color: var(--primary); margin-top: 10px; display: flex; align-items: center;">
-                    <span class="spinner"></span> Uploading & Reading...
+                    <span class="spinner"></span> Processing...
                 </div>
                 <div class="file-list" id="file-list-container" style="margin-top: 15px; display: flex; flex-direction: column; gap: 8px;"></div>
             </div>
@@ -301,7 +303,7 @@
             <div id="chat-container" class="chat-history">
                 <div class="message ai-msg">
                     <strong><i class="fa-solid fa-wand-magic-sparkles" style="color: #4da6ff;"></i> Gemini:</strong>
-                    <p style="margin-top: 5px;">Hello! I'm ready. Sign in to save your session.</p>
+                    <p style="margin-top: 5px;">Hello! I'm ready. Sign in to save your files to the cloud.</p>
                 </div>
             </div>
 
@@ -337,23 +339,28 @@
         import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
         import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
         import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-analytics.js";
 
+        // UPDATED CONFIGURATION
         const firebaseConfig = {
-            apiKey: "AIzaSyBcTwpQZJoxT_2xJttcj6RCHatSUXV2y0s",
+            apiKey: "AIzaSyBcTwpQZJoxT_2xJttcj6RChotSUXV2y0s",
             authDomain: "gdg-crackathon-a7294.firebaseapp.com",
             projectId: "gdg-crackathon-a7294",
             storageBucket: "gdg-crackathon-a7294.firebasestorage.app",
             messagingSenderId: "752107073890",
-            appId: "1:752107073890:web:0cdcff88737c266a6187c3b"
+            appId: "1:752107073890:web:0cdcf88737c266a6187c3b",
+            measurementId: "G-B86Y3JEVZ6"
         };
 
-        let db, storage, auth;
+        let db, storage, auth, analytics;
         try {
             const firebaseApp = initializeApp(firebaseConfig);
             db = getFirestore(firebaseApp);
             storage = getStorage(firebaseApp);
             auth = getAuth(firebaseApp);
+            analytics = getAnalytics(firebaseApp);
         } catch (e) { 
+            console.error("Firebase Init Error:", e); 
             alert("Firebase Init Error: " + e.message);
         }
 
@@ -471,17 +478,15 @@
             }
         };
 
-        // --- UPDATED LOGIN LOGIC WITH ERROR ALERT ---
         document.getElementById('loginBtn').onclick = () => {
             if(auth) {
                 const provider = new GoogleAuthProvider();
                 signInWithPopup(auth, provider).catch(e => {
                     console.error(e);
-                    // Alert the user so they can see the error code
                     alert("Login Error: " + e.message);
                 });
             } else {
-                alert("Firebase Auth not initialized. Check console for errors.");
+                alert("Firebase Auth not initialized.");
             }
         };
 
@@ -537,7 +542,7 @@
                     document.getElementById('file-list-container').appendChild(div);
 
                     if (text.trim().length < 50) {
-                        utils.addMessage('system', `⚠️ Warning: "${file.name}" appears to be a scanned image or empty. I might not be able to read it.`);
+                        utils.addMessage('system', `⚠️ Warning: "${file.name}" appears to be a scanned image or empty.`);
                     }
 
                 } catch (e) { 
